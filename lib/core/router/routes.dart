@@ -13,9 +13,11 @@ class AppRoutes {
   // Profil
   static const profile = '/profile';
 
-  // Boutiques & produits
-  static const shops = '/shops';
-  static const products = '/products';
+  // Boutiques & produits (espace propriétaire)
+  static const myShop = '/shop';
+  static const shopForm = '/shop/form';
+  static const shopProducts = '/shop/products';
+  static const productForm = '/shop/products/form';
 
   // Demandes instantanées
   static const requests = '/requests';

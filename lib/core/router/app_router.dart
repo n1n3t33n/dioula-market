@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,6 +7,12 @@ import '../../features/auth/presentation/otp_controller.dart';
 import '../../features/auth/presentation/otp_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/products/domain/product.dart';
+import '../../features/products/presentation/product_form_screen.dart';
+import '../../features/products/presentation/products_screen.dart';
+import '../../features/shops/domain/shop.dart';
+import '../../features/shops/presentation/my_shop_screen.dart';
+import '../../features/shops/presentation/shop_form_screen.dart';
 import '../config/env.dart';
 import '../providers/supabase_provider.dart';
 import 'routes.dart';
@@ -73,6 +79,39 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.otp,
         name: 'otp',
         builder: (context, state) => const OtpScreen(),
+      ),
+
+      // --- Espace boutique (propriétaire) ---
+      GoRoute(
+        path: AppRoutes.myShop,
+        name: 'myShop',
+        builder: (context, state) => const MyShopScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.shopForm,
+        name: 'shopForm',
+        // extra = la boutique à éditer (null = création)
+        builder: (context, state) =>
+            ShopFormScreen(existing: state.extra as Shop?),
+      ),
+      GoRoute(
+        path: AppRoutes.shopProducts,
+        name: 'shopProducts',
+        builder: (context, state) => const ProductsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.productForm,
+        name: 'productForm',
+        // extra = (shopId, produit à éditer ?)
+        builder: (context, state) {
+          final args = state.extra as (String, Product?)?;
+          if (args == null) {
+            return const Scaffold(
+              body: Center(child: Text('Aucun produit sélectionné')),
+            );
+          }
+          return ProductFormScreen(shopId: args.$1, existing: args.$2);
+        },
       ),
     ],
   );

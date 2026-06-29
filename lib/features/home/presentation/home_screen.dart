@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/config/env.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/router/routes.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/theme_toggle_button.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../profile/data/profile_repository.dart';
 
@@ -12,14 +15,15 @@ import '../../profile/data/profile_repository.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  static const _features = <(IconData, String)>[
-    (Icons.storefront_outlined, 'Boutiques virtuelles & produits'),
-    (Icons.search, 'Catalogue & recherche'),
-    (Icons.bolt_outlined, 'Demande instantanée (temps réel)'),
-    (Icons.event_available_outlined, 'Réservation avec acompte'),
-    (Icons.map_outlined, 'Commerçants proches (carte)'),
-    (Icons.star_outline, 'Notation croisée 5 étoiles'),
-    (Icons.bar_chart, 'Dashboard commerçant'),
+  // (icône, libellé, route active ou null si pas encore disponible)
+  static const _features = <(IconData, String, String?)>[
+    (Icons.storefront_outlined, 'Ma boutique & produits', AppRoutes.myShop),
+    (Icons.search, 'Catalogue & recherche', null),
+    (Icons.bolt_outlined, 'Demande instantanée (temps réel)', null),
+    (Icons.event_available_outlined, 'Réservation avec acompte', null),
+    (Icons.map_outlined, 'Commerçants proches (carte)', null),
+    (Icons.star_outline, 'Notation croisée 5 étoiles', null),
+    (Icons.bar_chart, 'Dashboard commerçant', null),
   ];
 
   @override
@@ -34,6 +38,7 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text(AppInfo.appName),
         actions: [
+          const ThemeToggleButton(),
           IconButton(
             tooltip: 'Se déconnecter',
             icon: const Icon(Icons.logout),
@@ -102,7 +107,14 @@ class HomeScreen extends ConsumerWidget {
               child: ListTile(
                 leading: Icon(f.$1, color: AppTheme.orange),
                 title: Text(f.$2),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: Icon(
+                  f.$3 == null ? Icons.lock_clock : Icons.chevron_right,
+                  color: f.$3 == null ? Colors.grey : null,
+                ),
+                enabled: f.$3 != null,
+                onTap: f.$3 == null
+                    ? null
+                    : () => context.push(f.$3!),
               ),
             ),
           ),
