@@ -174,8 +174,21 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `presentation/create_request_screen.dart` | Formulaire de publication |
 | `presentation/request_detail_screen.dart` | Offres temps réel + faire une offre + accepter |
 | `presentation/widgets/request_bits.dart` | Pastille statut + libellés |
+| **features/reservations/** | (réservation + acompte simulé) |
+| `domain/reservation.dart` | Modèle réservation (+ jointures produit/boutique) |
+| `data/reservations_repository.dart` | RPC reserve/complete/cancel/expire + providers |
+| `presentation/reserve_screen.dart` | Quantité + échéance + acompte (30 %) |
+| `presentation/fake_payment_screen.dart` | **Faux écran de paiement** (simulé) |
+| `presentation/my_reservations_screen.dart` | Mes réservations + annulation (12h) |
+| `presentation/shop_reservations_screen.dart` | Reçues (vendeur) : confirmer retrait |
+| `presentation/widgets/reservation_card.dart` | Carte réservation (montants, statut) |
+| **features/notifications/** | (in-app, temps réel) |
+| `domain/app_notification.dart` | Modèle notification |
+| `data/notifications_repository.dart` | Flux temps réel + non-lues + mark read |
+| `presentation/notification_bell_button.dart` | Cloche + badge (connectée) |
+| `presentation/notifications_screen.dart` | Liste des notifications |
 
-> Les dossiers `features/{reservations,orders,map,reviews,dashboard}`
+> Les dossiers `features/{orders,map,reviews,dashboard}`
 > existent (structure) mais seront remplis aux étapes suivantes.
 
 ---
@@ -190,6 +203,11 @@ Fichiers SQL à exécuter dans **SQL Editor** (dans l'ordre) :
 4. [`supabase/step5_requests.sql`](supabase/step5_requests.sql) — **étape 5** :
    active le **Realtime** sur `requests`/`offers` + fonction `accept_offer`
    (acceptation atomique) + `expire_old_requests` (optionnel). Ré-exécutable.
+5. [`supabase/step6.sql`](supabase/step6.sql) — **étape 6** : table
+   `notifications` (+ RLS, Realtime) & **triggers** (offres, réservations, stock
+   bas) ; fonctions **réservation** `reserve_product` / `complete_reservation` /
+   `cancel_reservation` / `expire_reservations` (acompte + stock auto).
+   Ré-exécutable.
 
 ### 🌱 Comptes de démonstration (seed) — mot de passe commun `demo1234`
 | Email | Rôle | Lieu / boutique |
@@ -277,7 +295,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 3 | Boutiques + CRUD produits (stock) | ✅ Fait |
 | 4 | Catalogue, recherche, fiche produit + boutique | ✅ Fait |
 | 5 | Demande instantanée (Realtime) + offres + acceptation | ✅ Fait |
-| 6 | Réservation avec acompte (simulé) | ⏳ |
+| 6 | Réservation avec acompte (simulé) + automatisations stock | ✅ Fait |
 | 7 | Géolocalisation (carte, tri proximité) | ⏳ |
 | 8 | Notation croisée 5 étoiles | ⏳ |
 | 9 | Dashboard commerçant | ⏳ |
@@ -287,6 +305,8 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 🎨 | Design system « marché ivoirien » + seed démo | ✅ Fait |
 | 🏠 | Accueil riche visiteur + catalogue + gating + bypass 2FA | ✅ Fait |
 | ⚡ | Demande instantanée : publication + Realtime + offres + acceptation | ✅ Fait |
+| 🎟️ | Réservation + acompte simulé + annulation 12h + stock auto | ✅ Fait |
+| 🔔 | Notifications in-app temps réel (offres, réservations, stock) | ✅ Fait |
 
 ### Journal
 - **Étape 1** — Projet `dioula_market` initialisé (Flutter 3.32 / Dart 3.8).
@@ -501,6 +521,31 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
     correctifs mineurs (avatar du profil affiché, cloche de notif sans faux compteur).
   - **Côté base** : ajout des `GRANT` table-level (anon/authenticated) dans
     `rls.sql` (sinon « permission denied 42501 » malgré les policies).
+  - Vérifié : `flutter analyze` = 0 problème.
+
+- **🎟️ Étape 6 — Réservation + acompte simulé + automatisations** :
+  - **Parcours** : fiche produit → « Réserver » → quantité + échéance →
+    récap (Total / **Acompte 30 %** / Solde) → **faux écran de paiement** →
+    réservation **active** (`reserve_product` : crée la résa, **décrémente le
+    stock**, trace l'acompte dans `payments`).
+  - **Mes réservations** (acheteur) : liste + **annulation jusqu'à 12 h** avant
+    l'échéance (remboursement intégral de l'acompte + ré-incrément du stock).
+  - **Réservations reçues** (vendeur, depuis sa boutique) : **confirmer le
+    retrait** (`complete_reservation` : solde réglé, statut terminée).
+  - **Expiration auto** (côté app, à l'ouverture de l'écran) :
+    `expire_reservations` → statut *expirée*, **remboursement 40 %** à
+    l'acheteur (40 % vendeur / 20 % plateforme) + ré-incrément du stock.
+  - **Stock** : décrément à la confirmation, ré-incrément à l'annulation/
+    expiration, **alerte stock bas** (< 5) au vendeur (trigger).
+  - Tout l'argent est **simulé** (table `payments` : acompte / solde /
+    remboursement).
+- **🔔 Notifications in-app (temps réel)** :
+  - Table `notifications` + **triggers** : nouvelle offre → consommateur ;
+    offre acceptée/refusée → vendeur ; nouvelle réservation → vendeur ;
+    statut de réservation → acheteur ; **stock bas** → vendeur.
+  - **Cloche connectée** dans l'accueil : badge du nombre de non-lues (temps
+    réel), clic → écran des notifications (marquées lues à l'ouverture).
+  - **SQL à exécuter** : `supabase/step6.sql`.
   - Vérifié : `flutter analyze` = 0 problème.
 
 ---

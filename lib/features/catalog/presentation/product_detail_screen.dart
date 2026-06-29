@@ -19,9 +19,13 @@ class ProductDetailScreen extends ConsumerWidget {
 
   void _reserve(BuildContext context, WidgetRef ref) {
     if (!requireAccount(context, ref, action: 'réserver ce produit')) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Réservation avec acompte — bientôt 🛒')),
-    );
+    if (!product.inStock) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Produit épuisé.')),
+      );
+      return;
+    }
+    context.push(AppRoutes.reserve, extra: product);
   }
 
   void _request(BuildContext context, WidgetRef ref) {

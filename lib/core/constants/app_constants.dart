@@ -122,8 +122,16 @@ const List<String> kUnits = [
   'unité',
 ];
 
-/// Pourcentage d'acompte par défaut pour une réservation (simulé).
-const double kDefaultDepositRate = 0.30;
+/// Pourcentage d'acompte payé à la réservation (simulé).
+const double kDepositRate = 0.30;
 
-/// Part de l'acompte remboursée si la réservation expire (simulé).
-const double kRefundRateOnExpiry = 0.50;
+/// Répartition de l'acompte si la réservation **expire** sans retrait :
+/// 40 % remboursés à l'acheteur, 40 % au vendeur, 20 % à la plateforme.
+const double kExpiryRefundBuyerRate = 0.40;
+const double kExpirySellerRate = 0.40;
+
+/// On peut annuler une réservation jusqu'à 12 h avant l'échéance (retrait).
+const int kReservationCancelCutoffHours = 12;
+
+/// Seuil d'alerte de stock bas (notification au vendeur).
+const int kLowStockThreshold = 5;

@@ -33,7 +33,13 @@ class AppRoutes {
   static const requestDetail = '/requests/detail'; // détail (extra = requestId)
 
   // Réservations
-  static const reservations = '/reservations';
+  static const reservations = '/reservations'; // mes réservations (acheteur)
+  static const reserve = '/reserve'; // écran de réservation (extra = CatalogProduct)
+  static const payment = '/payment'; // paiement simulé (extra = (montant, libellé))
+  static const shopReservations = '/shop/reservations'; // reçues (extra = shopId)
+
+  // Notifications
+  static const notifications = '/notifications';
 
   // Carte
   static const map = '/map';

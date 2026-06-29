@@ -20,6 +20,7 @@ import '../../catalog/domain/categories.dart';
 import '../../catalog/domain/instant_request.dart';
 import '../../catalog/presentation/widgets/product_card.dart';
 import '../../catalog/presentation/widgets/shop_card.dart';
+import '../../notifications/presentation/notification_bell_button.dart';
 import '../../profile/data/profile_repository.dart';
 
 /// Onglet « Accueil » — vitrine riche (style food app) consultable en visiteur :
@@ -223,7 +224,7 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
-        const NotificationBell(count: 0),
+        const NotificationBellButton(),
       ],
     ).animate().fadeIn(duration: 350.ms);
   }
@@ -318,9 +319,9 @@ class _ServicesRow extends ConsumerWidget {
             context.push(AppRoutes.requests);
           }
         }),
-        _Service(Icons.event_available, 'Réserver', AppColors.success, () {
-          if (requireAccount(context, ref, action: 'réserver')) {
-            soon('Réservation');
+        _Service(Icons.event_available, 'Réservations', AppColors.success, () {
+          if (requireAccount(context, ref, action: 'voir tes réservations')) {
+            context.push(AppRoutes.reservations);
           }
         }),
         _Service(Icons.local_shipping, 'Livraison', AppColors.beigeDeep, () {

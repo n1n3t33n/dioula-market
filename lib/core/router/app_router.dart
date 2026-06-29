@@ -14,6 +14,11 @@ import '../../features/catalog/presentation/product_detail_screen.dart';
 import '../../features/catalog/presentation/search_screen.dart';
 import '../../features/catalog/presentation/shop_detail_screen.dart';
 import '../../features/home/presentation/main_shell.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/reservations/presentation/fake_payment_screen.dart';
+import '../../features/reservations/presentation/my_reservations_screen.dart';
+import '../../features/reservations/presentation/reserve_screen.dart';
+import '../../features/reservations/presentation/shop_reservations_screen.dart';
 import '../../features/requests/presentation/create_request_screen.dart';
 import '../../features/requests/presentation/request_detail_screen.dart';
 import '../../features/requests/presentation/requests_hub_screen.dart';
@@ -151,6 +156,46 @@ final routerProvider = Provider<GoRouter>((ref) {
         // extra = requestId (String)
         pageBuilder: (context, state) =>
             _fade(state, RequestDetailScreen(requestId: state.extra as String)),
+      ),
+
+      // --- Réservations + paiement simulé ---
+      GoRoute(
+        path: AppRoutes.reservations,
+        name: 'reservations',
+        pageBuilder: (context, state) =>
+            _fade(state, const MyReservationsScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.reserve,
+        name: 'reserve',
+        // extra = CatalogProduct
+        pageBuilder: (context, state) =>
+            _fade(state, ReserveScreen(product: state.extra as CatalogProduct)),
+      ),
+      GoRoute(
+        path: AppRoutes.payment,
+        name: 'payment',
+        // extra = (montant: double, libellé: String)
+        pageBuilder: (context, state) {
+          final args = state.extra as (double, String);
+          return _fade(
+              state, FakePaymentScreen(amount: args.$1, label: args.$2));
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.shopReservations,
+        name: 'shopReservations',
+        // extra = shopId (String)
+        pageBuilder: (context, state) =>
+            _fade(state, ShopReservationsScreen(shopId: state.extra as String)),
+      ),
+
+      // --- Notifications ---
+      GoRoute(
+        path: AppRoutes.notifications,
+        name: 'notifications',
+        pageBuilder: (context, state) =>
+            _fade(state, const NotificationsScreen()),
       ),
       GoRoute(
         path: AppRoutes.tutorial,
