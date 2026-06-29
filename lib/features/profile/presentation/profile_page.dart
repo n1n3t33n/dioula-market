@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/theme/app_colors.dart';
@@ -34,6 +36,8 @@ class ProfilePage extends ConsumerWidget {
     final email = ref.watch(supabaseProvider).auth.currentUser?.email ?? '';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final name = profile?.displayName ?? 'Utilisateur';
+    final role = profile?.role;
+    final avatarUrl = profile?.avatarUrl;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
@@ -46,14 +50,19 @@ class ProfilePage extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 44,
-                  backgroundColor: AppColors.green,
-                  child: Text(
-                    name.characters.first.toUpperCase(),
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 34,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  backgroundColor: AppColors.clay,
+                  backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                      ? CachedNetworkImageProvider(avatarUrl)
+                      : null,
+                  child: (avatarUrl == null || avatarUrl.isEmpty)
+                      ? Text(
+                          name.characters.first.toUpperCase(),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold),
+                        )
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 Text(name,
@@ -96,13 +105,16 @@ class ProfilePage extends ConsumerWidget {
                       .read(themeModeProvider.notifier)
                       .set(v ? ThemeMode.dark : ThemeMode.light),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.storefront_outlined),
-                  title: const Text('Ma boutique'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push(AppRoutes.myShop),
-                ),
+                // Boutique : réservée aux vendeurs (commerçant / producteur).
+                if (role?.isSeller ?? false) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.storefront_outlined),
+                    title: const Text('Ma boutique'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push(AppRoutes.myShop),
+                  ),
+                ],
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.school_outlined),

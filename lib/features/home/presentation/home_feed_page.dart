@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/format.dart';
@@ -222,7 +223,7 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
-        const NotificationBell(count: 2),
+        const NotificationBell(count: 0),
       ],
     ).animate().fadeIn(duration: 350.ms);
   }
@@ -282,26 +283,53 @@ class _ServicesRow extends ConsumerWidget {
           SnackBar(content: Text('$label — bientôt 🚧')),
         );
 
-    final services = <_Service>[
-      _Service(Icons.search, 'Recherche', AppColors.info,
-          () => context.push(AppRoutes.search)),
-      _Service(Icons.bolt, 'Demande', AppColors.clay, () {
-        if (requireAccount(context, ref, action: 'publier une demande')) {
-          context.push(AppRoutes.requests);
-        }
-      }),
-      _Service(Icons.event_available, 'Réserver', AppColors.success, () {
-        if (requireAccount(context, ref, action: 'réserver')) {
-          soon('Réservation');
-        }
-      }),
-      _Service(Icons.storefront, 'Vendre', AppColors.ocre, onOpenShop),
-      _Service(Icons.local_shipping, 'Livraison', AppColors.beigeDeep, () {
-        if (requireAccount(context, ref, action: 'suivre une livraison')) {
-          soon('Livraison');
-        }
-      }),
-    ];
+    final isGuest = ref.watch(isGuestProvider);
+    final role = isGuest
+        ? UserRole.consommateur
+        : (ref.watch(currentProfileProvider).value?.role ??
+            UserRole.consommateur);
+
+    final search = _Service(Icons.search, 'Recherche', AppColors.info,
+        () => context.push(AppRoutes.search));
+
+    // Services adaptés au rôle (un consommateur ne « vend » pas, etc.).
+    final List<_Service> services;
+    if (!isGuest && role.isSeller) {
+      services = [
+        search,
+        _Service(Icons.storefront, 'Ma boutique', AppColors.ocre, onOpenShop),
+        _Service(Icons.bolt, 'Demandes', AppColors.clay,
+            () => context.push(AppRoutes.requests)),
+        _Service(Icons.bar_chart, 'Tableau de bord', AppColors.success,
+            () => soon('Tableau de bord')),
+      ];
+    } else if (!isGuest && role.isCourier) {
+      services = [
+        search,
+        _Service(Icons.local_shipping, 'Courses', AppColors.clay,
+            () => soon('Courses')),
+      ];
+    } else {
+      // Consommateur + visiteur.
+      services = [
+        search,
+        _Service(Icons.bolt, 'Demande', AppColors.clay, () {
+          if (requireAccount(context, ref, action: 'publier une demande')) {
+            context.push(AppRoutes.requests);
+          }
+        }),
+        _Service(Icons.event_available, 'Réserver', AppColors.success, () {
+          if (requireAccount(context, ref, action: 'réserver')) {
+            soon('Réservation');
+          }
+        }),
+        _Service(Icons.local_shipping, 'Livraison', AppColors.beigeDeep, () {
+          if (requireAccount(context, ref, action: 'suivre une livraison')) {
+            soon('Livraison');
+          }
+        }),
+      ];
+    }
 
     return SizedBox(
       height: 86,

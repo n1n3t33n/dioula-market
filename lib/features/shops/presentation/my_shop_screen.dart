@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/guest_gate.dart';
 import '../../auth/presentation/guest_provider.dart';
+import '../../profile/data/profile_repository.dart';
 import '../data/shop_repository.dart';
 
 /// Écran « Ma boutique ».
@@ -25,6 +28,21 @@ class MyShopScreen extends ConsumerWidget {
           title: 'Réservé aux membres',
           message:
               'Connecte-toi ou crée un compte (Commerçant/Producteur) pour ouvrir ta boutique et gérer tes produits.',
+        ),
+      );
+    }
+
+    // Réservé aux vendeurs : un consommateur / livreur n'a pas de boutique.
+    final role = ref.watch(currentProfileProvider).value?.role;
+    if (role != null && !role.isSeller) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Ma boutique')),
+        body: const EmptyState(
+          icon: Icons.storefront_outlined,
+          title: 'Réservé aux vendeurs',
+          message:
+              'Seuls les comptes Commerçant ou Producteur peuvent ouvrir une '
+              'boutique et gérer des produits.',
         ),
       );
     }

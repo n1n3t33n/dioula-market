@@ -49,6 +49,16 @@ enum UserRole {
           orElse: () => UserRole.consommateur);
 }
 
+/// Raccourcis de rôle pour piloter la logique métier (navigation, services…).
+extension UserRoleX on UserRole {
+  /// Vend des produits (a une boutique) : commerçant ou producteur.
+  bool get isSeller =>
+      this == UserRole.commercant || this == UserRole.producteur;
+
+  bool get isConsumer => this == UserRole.consommateur;
+  bool get isCourier => this == UserRole.livreur;
+}
+
 /// Statut d'une demande instantanée (`requests`).
 enum RequestStatus {
   ouverte('ouverte', 'Ouverte'),

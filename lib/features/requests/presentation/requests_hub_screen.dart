@@ -36,8 +36,22 @@ class RequestsHubScreen extends ConsumerWidget {
 
     final role =
         ref.watch(currentProfileProvider).value?.role ?? UserRole.consommateur;
-    final isConsumer = role == UserRole.consommateur;
-    return isConsumer ? const _MyRequestsView() : const _OpenRequestsView();
+
+    // Consommateur : ses demandes. Vendeur : demandes à pourvoir.
+    if (role.isConsumer) return const _MyRequestsView();
+    if (role.isSeller) return const _OpenRequestsView();
+
+    // Livreur / admin : non concernés par les demandes de produits.
+    return Scaffold(
+      appBar: AppBar(title: const Text('Demandes')),
+      body: const EmptyState(
+        icon: Icons.bolt_outlined,
+        title: 'Non concerné',
+        message:
+            'Les demandes instantanées relient consommateurs et vendeurs. '
+            'Ton rôle n\'intervient pas ici.',
+      ),
+    );
   }
 }
 

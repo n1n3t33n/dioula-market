@@ -4,12 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/env.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../auth/presentation/guest_provider.dart';
+import '../../profile/data/profile_repository.dart';
 import '../../profile/presentation/profile_page.dart';
+import '../../requests/presentation/requests_hub_screen.dart';
 import '../../shops/presentation/my_shop_screen.dart';
 import 'home_feed_page.dart';
 
-/// Coquille principale de l'app (après connexion) : barre de navigation
-/// basse façon Foodly + contenu en `IndexedStack` (conserve l'état des onglets).
+/// Coquille principale (après connexion / en visiteur) : barre de navigation
+/// basse **adaptée au rôle** + contenu en `IndexedStack` (conserve l'état).
+///
+/// - Consommateur / visiteur : Accueil · Demandes · Profil
+/// - Commerçant / Producteur : Accueil · Boutique · Demandes · Profil
+/// - Livreur : Accueil · Courses · Profil
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -22,43 +31,111 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   void _goTo(int i) => setState(() => _index = i);
 
-  /// Icône « sélectionnée » qui rebondit (élastique) à chaque changement
-  /// d'onglet — la clé suit l'index pour rejouer l'animation.
+  /// Icône sélectionnée qui rebondit à chaque changement d'onglet.
   Widget _bounce(IconData icon) => Icon(icon)
       .animate(key: ValueKey(_index))
       .scaleXY(begin: 0.7, end: 1, duration: 350.ms, curve: Curves.elasticOut);
 
   @override
   Widget build(BuildContext context) {
-    // Sans backend configuré : message d'aide (mode démo).
     if (!Env.isConfigured) return const _NotConfigured();
 
-    final pages = [
-      HomeFeedPage(onOpenShop: () => _goTo(1)),
-      const MyShopScreen(),
-      const ProfilePage(),
-    ];
+    final isGuest = ref.watch(isGuestProvider);
+    final role =
+        ref.watch(currentProfileProvider).value?.role ?? UserRole.consommateur;
+
+    // Onglets selon le rôle.
+    final List<_NavTab> tabs;
+    if (!isGuest && role.isSeller) {
+      tabs = [
+        _NavTab(Icons.home_outlined, Icons.home, 'Accueil',
+            HomeFeedPage(onOpenShop: () => _goTo(1))),
+        const _NavTab(Icons.storefront_outlined, Icons.storefront, 'Boutique',
+            MyShopScreen()),
+        const _NavTab(
+            Icons.bolt_outlined, Icons.bolt, 'Demandes', RequestsHubScreen()),
+        const _NavTab(
+            Icons.person_outline, Icons.person, 'Profil', ProfilePage()),
+      ];
+    } else if (!isGuest && role.isCourier) {
+      tabs = [
+        _NavTab(Icons.home_outlined, Icons.home, 'Accueil',
+            HomeFeedPage(onOpenShop: () {})),
+        const _NavTab(
+          Icons.local_shipping_outlined,
+          Icons.local_shipping,
+          'Courses',
+          _ComingSoon(
+            icon: Icons.local_shipping_outlined,
+            title: 'Courses de livraison',
+            message:
+                'Le pool de livraisons disponibles arrive à l\'étape suivante.',
+          ),
+        ),
+        const _NavTab(
+            Icons.person_outline, Icons.person, 'Profil', ProfilePage()),
+      ];
+    } else {
+      // Consommateur + visiteur.
+      tabs = [
+        _NavTab(Icons.home_outlined, Icons.home, 'Accueil',
+            HomeFeedPage(onOpenShop: () {})),
+        const _NavTab(
+            Icons.bolt_outlined, Icons.bolt, 'Demandes', RequestsHubScreen()),
+        const _NavTab(
+            Icons.person_outline, Icons.person, 'Profil', ProfilePage()),
+      ];
+    }
+
+    // Sécurité : si le rôle change et réduit le nombre d'onglets.
+    final index = _index < tabs.length ? _index : 0;
 
     return Scaffold(
-      body: IndexedStack(index: _index, children: pages),
+      body: IndexedStack(
+        index: index,
+        children: [for (final t in tabs) t.page],
+      ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
+        selectedIndex: index,
         onDestinationSelected: _goTo,
         destinations: [
-          NavigationDestination(
-              icon: const Icon(Icons.home_outlined),
-              selectedIcon: _bounce(Icons.home),
-              label: 'Accueil'),
-          NavigationDestination(
-              icon: const Icon(Icons.storefront_outlined),
-              selectedIcon: _bounce(Icons.storefront),
-              label: 'Boutique'),
-          NavigationDestination(
-              icon: const Icon(Icons.person_outline),
-              selectedIcon: _bounce(Icons.person),
-              label: 'Profil'),
+          for (final t in tabs)
+            NavigationDestination(
+              icon: Icon(t.icon),
+              selectedIcon: _bounce(t.selectedIcon),
+              label: t.label,
+            ),
         ],
       ),
+    );
+  }
+}
+
+/// Descripteur d'un onglet de la barre de navigation.
+class _NavTab {
+  const _NavTab(this.icon, this.selectedIcon, this.label, this.page);
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final Widget page;
+}
+
+/// Écran « bientôt disponible » (onglets en cours de construction).
+class _ComingSoon extends StatelessWidget {
+  const _ComingSoon({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+  final IconData icon;
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: EmptyState(icon: icon, title: title, message: message),
     );
   }
 }
@@ -76,11 +153,10 @@ class _NotConfigured extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.warning_amber, size: 64, color: Colors.orange),
+              Icon(Icons.warning_amber, size: 64, color: AppColors.warning),
               SizedBox(height: 16),
               Text('Supabase non configuré',
-                  style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text(
                 'Copie .env.example → .env et renseigne SUPABASE_URL et '

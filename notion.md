@@ -483,6 +483,26 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - **SQL à exécuter** : `supabase/step5_requests.sql` (Realtime + `accept_offer`).
   - Vérifié : `flutter analyze` = 0 problème.
 
+- **🧭 Cohérence des rôles (correctifs logique)** — l'app exposait les mêmes
+  fonctionnalités à tous les rôles. Corrigé :
+  - **Navigation basse adaptée au rôle** (`main_shell.dart`) :
+    Consommateur/visiteur → *Accueil · Demandes · Profil* ;
+    Commerçant/Producteur → *Accueil · Boutique · Demandes · Profil* ;
+    Livreur → *Accueil · Courses (bientôt) · Profil*.
+  - **Services de l'accueil adaptés au rôle** (`home_feed_page.dart`) : plus de
+    « Vendre » pour un consommateur ; le vendeur voit *Ma boutique / Demandes /
+    Tableau de bord* ; le livreur voit *Courses*.
+  - **Boutique réservée aux vendeurs** : `MyShopScreen` bloque les rôles
+    consommateur/livreur ; la tuile « Ma boutique » du profil n'apparaît que
+    pour un vendeur.
+  - **Hub demandes** : le livreur n'est plus traité comme un vendeur (écran
+    « non concerné »).
+  - **Extension `UserRoleX`** (`isSeller` / `isConsumer` / `isCourier`) +
+    correctifs mineurs (avatar du profil affiché, cloche de notif sans faux compteur).
+  - **Côté base** : ajout des `GRANT` table-level (anon/authenticated) dans
+    `rls.sql` (sinon « permission denied 42501 » malgré les policies).
+  - Vérifié : `flutter analyze` = 0 problème.
+
 ---
 
 ## 7. Notes & décisions
