@@ -28,7 +28,9 @@ class AppRoutes {
   static const productForm = '/shop/products/form';
 
   // Demandes instantanées
-  static const requests = '/requests';
+  static const requests = '/requests'; // hub (adapté au rôle)
+  static const requestNew = '/requests/new'; // création d'une demande
+  static const requestDetail = '/requests/detail'; // détail (extra = requestId)
 
   // Réservations
   static const reservations = '/reservations';

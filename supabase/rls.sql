@@ -16,6 +16,23 @@ alter table public.order_items  enable row level security;
 alter table public.reviews      enable row level security;
 alter table public.payments     enable row level security;
 
+-- ---------- Privilèges de TABLE (indispensables EN PLUS des policies) ----------
+-- Une policy RLS ne donne pas le droit d'accès : il faut aussi GRANT au rôle.
+-- Sans ça → « permission denied for table … (42501) ». Les RLS filtrent ensuite
+-- les lignes réellement visibles par chaque utilisateur.
+grant usage on schema public to anon, authenticated;
+grant select on all tables in schema public to anon, authenticated;
+grant insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to anon, authenticated;
+
+-- S'applique aussi aux futures tables créées par la suite.
+alter default privileges in schema public
+  grant select on tables to anon, authenticated;
+alter default privileges in schema public
+  grant insert, update, delete on tables to authenticated;
+alter default privileges in schema public
+  grant usage, select on sequences to anon, authenticated;
+
 -- ---------- Rejouable : on retire d'abord les policies existantes ----------
 -- (Postgres n'a pas de "create or replace policy" ; on nettoie puis recrée.)
 do $$

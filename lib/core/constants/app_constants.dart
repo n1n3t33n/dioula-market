@@ -99,6 +99,19 @@ enum OrderStatus {
   final String label;
 }
 
+/// Unités de vente proposées (formulaires produit / demande).
+const List<String> kUnits = [
+  'kg',
+  'sac',
+  'litre',
+  'régime',
+  'tas',
+  'carton',
+  'sachet',
+  'portion',
+  'unité',
+];
+
 /// Pourcentage d'acompte par défaut pour une réservation (simulé).
 const double kDefaultDepositRate = 0.30;
 

@@ -14,6 +14,9 @@ import '../../features/catalog/presentation/product_detail_screen.dart';
 import '../../features/catalog/presentation/search_screen.dart';
 import '../../features/catalog/presentation/shop_detail_screen.dart';
 import '../../features/home/presentation/main_shell.dart';
+import '../../features/requests/presentation/create_request_screen.dart';
+import '../../features/requests/presentation/request_detail_screen.dart';
+import '../../features/requests/presentation/requests_hub_screen.dart';
 import '../../features/tutorial/presentation/tutorial_screen.dart';
 import '../../features/products/domain/product.dart';
 import '../../features/products/presentation/product_form_screen.dart';
@@ -128,6 +131,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         // extra = shopId (String)
         pageBuilder: (context, state) =>
             _fade(state, ShopDetailScreen(shopId: state.extra as String)),
+      ),
+
+      // --- Demandes instantanées ---
+      GoRoute(
+        path: AppRoutes.requests,
+        name: 'requests',
+        pageBuilder: (context, state) => _fade(state, const RequestsHubScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.requestNew,
+        name: 'requestNew',
+        pageBuilder: (context, state) =>
+            _fade(state, const CreateRequestScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.requestDetail,
+        name: 'requestDetail',
+        // extra = requestId (String)
+        pageBuilder: (context, state) =>
+            _fade(state, RequestDetailScreen(requestId: state.extra as String)),
       ),
       GoRoute(
         path: AppRoutes.tutorial,

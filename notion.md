@@ -166,7 +166,16 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `presentation/widgets/shop_card.dart` | Carte boutique |
 | `features/auth/.../widgets/guest_invite_sheet.dart` | Modale visiteur + `requireAccount()` |
 
-> Les dossiers `features/{offers,reservations,orders,map,reviews,dashboard}`
+| **features/requests/** | (demande instantanée — cœur, Realtime) |
+| `domain/market_request.dart` | Modèle d'une demande |
+| `domain/offer.dart` | Modèle d'une offre vendeur |
+| `data/requests_repository.dart` | CRUD + **flux temps réel** + RPC `accept_offer` |
+| `presentation/requests_hub_screen.dart` | Hub adapté au rôle (mes demandes / demandes ouvertes) |
+| `presentation/create_request_screen.dart` | Formulaire de publication |
+| `presentation/request_detail_screen.dart` | Offres temps réel + faire une offre + accepter |
+| `presentation/widgets/request_bits.dart` | Pastille statut + libellés |
+
+> Les dossiers `features/{reservations,orders,map,reviews,dashboard}`
 > existent (structure) mais seront remplis aux étapes suivantes.
 
 ---
@@ -178,6 +187,9 @@ Fichiers SQL à exécuter dans **SQL Editor** (dans l'ordre) :
 2. [`supabase/rls.sql`](supabase/rls.sql) — Row Level Security
 3. [`supabase/seed.sql`](supabase/seed.sql) — **données de démo** (comptes,
    boutiques, produits, avis, demandes). Ré-exécutable.
+4. [`supabase/step5_requests.sql`](supabase/step5_requests.sql) — **étape 5** :
+   active le **Realtime** sur `requests`/`offers` + fonction `accept_offer`
+   (acceptation atomique) + `expire_old_requests` (optionnel). Ré-exécutable.
 
 ### 🌱 Comptes de démonstration (seed) — mot de passe commun `demo1234`
 | Email | Rôle | Lieu / boutique |
@@ -264,7 +276,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 2 | Auth (email + mdp + 2FA SMS simulée) + profils/rôle | ✅ Fait |
 | 3 | Boutiques + CRUD produits (stock) | ✅ Fait |
 | 4 | Catalogue, recherche, fiche produit + boutique | ✅ Fait |
-| 5 | Demande instantanée (Realtime) + offres | ⏳ |
+| 5 | Demande instantanée (Realtime) + offres + acceptation | ✅ Fait |
 | 6 | Réservation avec acompte (simulé) | ⏳ |
 | 7 | Géolocalisation (carte, tri proximité) | ⏳ |
 | 8 | Notation croisée 5 étoiles | ⏳ |
@@ -274,6 +286,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 🎬 | Animations (cahier des charges : fond, tap, succès…) | ✅ Fait |
 | 🎨 | Design system « marché ivoirien » + seed démo | ✅ Fait |
 | 🏠 | Accueil riche visiteur + catalogue + gating + bypass 2FA | ✅ Fait |
+| ⚡ | Demande instantanée : publication + Realtime + offres + acceptation | ✅ Fait |
 
 ### Journal
 - **Étape 1** — Projet `dioula_market` initialisé (Flutter 3.32 / Dart 3.8).
@@ -448,6 +461,26 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - Routes ajoutées : `/search`, `/product`, `/shop/view`.
   - **Données** : alimenté par `supabase/seed.sql` (boutiques, produits, avis,
     demandes). Images = placeholders `picsum.photos` (remplaçables).
+  - Vérifié : `flutter analyze` = 0 problème.
+
+- **⚡ Étape 5 — Demande instantanée (cœur, temps réel)** :
+  - **Feature `requests`** : `RequestsRepository` (publication, flux temps réel
+    `.stream()`, soumission d'offre, RPC `accept_offer`, annulation) + modèles
+    `MarketRequest` / `Offer` + providers Riverpod (`myRequestsStreamProvider`,
+    `openRequestsStreamProvider`, `offersForRequestProvider`, `requestByIdProvider`).
+  - **Parcours complet** : le consommateur **publie** une demande (produit,
+    quantité, rayon, échéance) → elle apparaît **en direct** chez les vendeurs
+    (hub « Demandes près de vous ») → un vendeur **soumet une offre** (prix,
+    quantité, délai, message) → elle remonte **en direct** au consommateur →
+    il **accepte** → la fonction SQL `accept_offer` crée la **commande**, passe
+    l'offre en *acceptée*, les autres en *refusée*, et clôt la demande.
+  - **Écrans** : hub adapté au rôle (`requests_hub_screen`), création
+    (`create_request_screen`), détail temps réel (`request_detail_screen` :
+    offres live, bottom sheet « Faire une offre », bouton « Accepter »).
+  - **Câblage** : service « Demande » de l'accueil + cartes « Demandes en cours »
+    → hub / détail (avec gating visiteur). Routes `/requests`, `/requests/new`,
+    `/requests/detail`.
+  - **SQL à exécuter** : `supabase/step5_requests.sql` (Realtime + `accept_offer`).
   - Vérifié : `flutter analyze` = 0 problème.
 
 ---

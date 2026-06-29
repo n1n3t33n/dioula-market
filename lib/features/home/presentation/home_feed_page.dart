@@ -287,7 +287,7 @@ class _ServicesRow extends ConsumerWidget {
           () => context.push(AppRoutes.search)),
       _Service(Icons.bolt, 'Demande', AppColors.clay, () {
         if (requireAccount(context, ref, action: 'publier une demande')) {
-          soon('Demande instantanée');
+          context.push(AppRoutes.requests);
         }
       }),
       _Service(Icons.event_available, 'Réserver', AppColors.success, () {
@@ -626,12 +626,12 @@ class _ShopRail extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 //  DEMANDES EN COURS
 // ---------------------------------------------------------------------------
-class _RequestsList extends StatelessWidget {
+class _RequestsList extends ConsumerWidget {
   const _RequestsList({required this.async});
   final AsyncValue<List<InstantRequest>> async;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return async.when(
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
@@ -657,7 +657,15 @@ class _RequestsList extends StatelessWidget {
             for (final r in requests)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: _RequestCard(request: r),
+                child: _RequestCard(
+                  request: r,
+                  onTap: () {
+                    if (requireAccount(context, ref,
+                        action: 'voir cette demande')) {
+                      context.push(AppRoutes.requestDetail, extra: r.id);
+                    }
+                  },
+                ),
               ),
           ],
         );
@@ -667,8 +675,9 @@ class _RequestsList extends StatelessWidget {
 }
 
 class _RequestCard extends StatelessWidget {
-  const _RequestCard({required this.request});
+  const _RequestCard({required this.request, this.onTap});
   final InstantRequest request;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -676,7 +685,10 @@ class _RequestCard extends StatelessWidget {
         ? ''
         : '${formatQty(request.quantity!)} ${request.unit ?? ''} · ';
     return Card(
-      child: Padding(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
@@ -710,6 +722,7 @@ class _RequestCard extends StatelessWidget {
             ),
             const AppBadge(label: 'Ouverte', color: AppColors.success),
           ],
+        ),
         ),
       ),
     );
