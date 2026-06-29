@@ -9,6 +9,10 @@ import '../../features/auth/presentation/otp_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/success_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
+import '../../features/catalog/domain/catalog_product.dart';
+import '../../features/catalog/presentation/product_detail_screen.dart';
+import '../../features/catalog/presentation/search_screen.dart';
+import '../../features/catalog/presentation/shop_detail_screen.dart';
 import '../../features/home/presentation/main_shell.dart';
 import '../../features/tutorial/presentation/tutorial_screen.dart';
 import '../../features/products/domain/product.dart';
@@ -101,6 +105,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.success,
         name: 'success',
         pageBuilder: (context, state) => _fade(state, const SuccessScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.search,
+        name: 'search',
+        // extra = catégorie initiale optionnelle (String)
+        pageBuilder: (context, state) =>
+            _fade(state, SearchScreen(initialCategory: state.extra as String?)),
+      ),
+      GoRoute(
+        path: AppRoutes.productDetail,
+        name: 'productDetail',
+        // extra = CatalogProduct
+        pageBuilder: (context, state) => _fade(
+          state,
+          ProductDetailScreen(product: state.extra as CatalogProduct),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.shopView,
+        name: 'shopView',
+        // extra = shopId (String)
+        pageBuilder: (context, state) =>
+            _fade(state, ShopDetailScreen(shopId: state.extra as String)),
       ),
       GoRoute(
         path: AppRoutes.tutorial,

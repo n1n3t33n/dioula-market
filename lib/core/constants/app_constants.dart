@@ -9,6 +9,29 @@ class AppInfo {
   static const tagline = 'Le marché local, en temps réel.';
 }
 
+/// Comptes de démonstration créés par `supabase/seed.sql`.
+///
+/// Ils partagent le mot de passe [password] et **bypassent la 2FA simulée**
+/// (connexion directe) pour faciliter les tests/soutenance. La 2FA reste
+/// active pour le parcours d'inscription normal. Le bypass est consommé dans
+/// le flux d'auth (voir `AuthController` / `OtpController`).
+class DemoAccounts {
+  DemoAccounts._();
+
+  static const password = 'demo1234';
+
+  static const emails = <String>{
+    'samira@demo.ci', // Consommatrice — Cocody
+    'raoul@demo.ci', // Commerçant — « Chez Brou », Adjamé
+    'jacob@demo.ci', // Producteur — « Ferme Kouamé », Agboville
+    'kader@demo.ci', // Livreur — Yopougon
+    'anais@demo.ci', // Commerçante — « Maquis Fatim », Treichville
+  };
+
+  static bool isDemo(String? email) =>
+      email != null && emails.contains(email.trim().toLowerCase());
+}
+
 /// Rôles utilisateur (stockés sur la table `profiles`).
 enum UserRole {
   producteur('producteur', 'Producteur'),

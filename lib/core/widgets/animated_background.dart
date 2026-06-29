@@ -56,7 +56,7 @@ class AnimatedBackground extends StatelessWidget {
                   seconds: 9,
                 ),
                 _Blob(
-                  color: Color(0xFF2BB76A),
+                  color: AppColors.beige,
                   alpha: 0.40,
                   size: 260,
                   bottom: -70,

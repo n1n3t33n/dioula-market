@@ -17,27 +17,28 @@ class AppTheme {
   // ---------------- THÈME CLAIR ----------------
   static ThemeData get light {
     const scheme = ColorScheme.light(
-      primary: AppColors.green,
-      secondary: AppColors.orange,
-      surface: Colors.white,
+      primary: AppColors.clay,
       onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onSurface: AppColors.title,
+      secondary: AppColors.ocre,
+      onSecondary: AppColors.ink,
+      tertiary: AppColors.beige,
+      onTertiary: AppColors.ink,
+      surface: AppColors.surfaceLight,
+      onSurface: AppColors.ink,
       error: AppColors.danger,
     );
 
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
     return base.copyWith(
-      scaffoldBackgroundColor: Colors.white,
-      textTheme: GoogleFonts.poppinsTextTheme(base.textTheme)
-          .apply(bodyColor: AppColors.title, displayColor: AppColors.title),
+      scaffoldBackgroundColor: AppColors.cream,
+      textTheme: _textTheme(base, AppColors.ink),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.title,
+        backgroundColor: AppColors.cream,
+        foregroundColor: AppColors.ink,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: AppColors.title),
+        iconTheme: IconThemeData(color: AppColors.ink),
       ),
       inputDecorationTheme: _inputTheme(
         fill: AppColors.inputLight,
@@ -46,24 +47,22 @@ class AppTheme {
       ),
       filledButtonTheme: _filledButton(),
       elevatedButtonTheme: _elevatedButton(),
-      outlinedButtonTheme: _outlinedButton(AppColors.green),
+      outlinedButtonTheme: _outlinedButton(AppColors.clay),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: AppColors.green),
+        style: TextButton.styleFrom(foregroundColor: AppColors.clay),
       ),
-      cardTheme: CardThemeData(
-        color: Colors.white,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+      cardTheme: _cardTheme(
+        color: AppColors.surfaceLight,
+        shadow: AppColors.shadowLight.withValues(alpha: 0.16),
       ),
-      chipTheme: _chipTheme(bg: AppColors.green.withValues(alpha: 0.10)),
+      chipTheme: _chipTheme(
+        bg: AppColors.clay.withValues(alpha: 0.10),
+        fg: AppColors.clayDark,
+      ),
       dividerTheme: const DividerThemeData(color: AppColors.borderLight),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: AppColors.green,
-        unselectedItemColor: AppColors.body,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
+      navigationBarTheme: _navBarTheme(
+        bg: Colors.white,
+        unselected: AppColors.body,
       ),
     );
   }
@@ -71,11 +70,13 @@ class AppTheme {
   // ---------------- THÈME SOMBRE ----------------
   static ThemeData get dark {
     const scheme = ColorScheme.dark(
-      primary: AppColors.green,
-      secondary: AppColors.orange,
-      surface: AppColors.cardDark,
+      primary: AppColors.clay,
       onPrimary: Colors.white,
-      onSecondary: Colors.white,
+      secondary: AppColors.ocre,
+      onSecondary: AppColors.ink,
+      tertiary: AppColors.beige,
+      onTertiary: AppColors.ink,
+      surface: AppColors.cardDark,
       onSurface: Colors.white,
       error: AppColors.danger,
     );
@@ -83,8 +84,7 @@ class AppTheme {
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.bgDark,
-      textTheme: GoogleFonts.poppinsTextTheme(base.textTheme)
-          .apply(bodyColor: Colors.white, displayColor: Colors.white),
+      textTheme: _textTheme(base, Colors.white),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.bgDark,
         foregroundColor: Colors.white,
@@ -102,22 +102,20 @@ class AppTheme {
       elevatedButtonTheme: _elevatedButton(),
       outlinedButtonTheme: _outlinedButton(Colors.white),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: AppColors.green),
+        style: TextButton.styleFrom(foregroundColor: AppColors.ocre),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: _cardTheme(
         color: AppColors.cardDark,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shadow: Colors.black.withValues(alpha: 0.45),
       ),
-      chipTheme: _chipTheme(bg: AppColors.surfaceDark),
+      chipTheme: _chipTheme(
+        bg: AppColors.clay.withValues(alpha: 0.18),
+        fg: AppColors.ocre,
+      ),
       dividerTheme: const DividerThemeData(color: AppColors.borderDark),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.cardDark,
-        selectedItemColor: AppColors.green,
-        unselectedItemColor: AppColors.bodyDark,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
+      navigationBarTheme: _navBarTheme(
+        bg: AppColors.cardDark,
+        unselected: AppColors.bodyDark,
       ),
     );
   }
@@ -184,11 +182,69 @@ class AppTheme {
         ),
       );
 
-  static ChipThemeData _chipTheme({required Color bg}) => ChipThemeData(
+  static ChipThemeData _chipTheme({required Color bg, required Color fg}) =>
+      ChipThemeData(
         backgroundColor: bg,
         side: BorderSide.none,
-        labelStyle: GoogleFonts.poppins(fontSize: 12),
+        labelStyle: GoogleFonts.poppins(
+            fontSize: 12, fontWeight: FontWeight.w600, color: fg),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+            borderRadius: BorderRadius.circular(10)),
+      );
+
+  /// Typographie Poppins avec une hiérarchie nette (titres gras).
+  static TextTheme _textTheme(ThemeData base, Color color) {
+    final t = GoogleFonts.poppinsTextTheme(base.textTheme)
+        .apply(bodyColor: color, displayColor: color);
+    return t.copyWith(
+      headlineSmall:
+          t.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+      titleLarge: t.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+      titleMedium: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+    );
+  }
+
+  /// Cartes : coins bien arrondis + ombre douce (élévation visible).
+  static CardThemeData _cardTheme({required Color color, required Color shadow}) =>
+      CardThemeData(
+        color: color,
+        elevation: 6,
+        shadowColor: shadow,
+        surfaceTintColor: Colors.transparent,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18)),
+      );
+
+  /// Bottom nav Material 3 : indicateur teinté + libellés/icônes colorés.
+  static NavigationBarThemeData _navBarTheme({
+    required Color bg,
+    required Color unselected,
+  }) =>
+      NavigationBarThemeData(
+        backgroundColor: bg,
+        elevation: 8,
+        height: 68,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: AppColors.clay.withValues(alpha: 0.16),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.clay
+                : unselected,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.clay
+                : unselected,
+          ),
+        ),
       );
 }

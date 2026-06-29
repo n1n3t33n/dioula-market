@@ -16,6 +16,22 @@ alter table public.order_items  enable row level security;
 alter table public.reviews      enable row level security;
 alter table public.payments     enable row level security;
 
+-- ---------- Rejouable : on retire d'abord les policies existantes ----------
+-- (Postgres n'a pas de "create or replace policy" ; on nettoie puis recrée.)
+do $$
+declare p record;
+begin
+  for p in
+    select policyname, tablename
+    from pg_policies
+    where schemaname = 'public'
+      and tablename in ('profiles','shops','products','requests','offers',
+                        'reservations','orders','order_items','reviews','payments')
+  loop
+    execute format('drop policy if exists %I on public.%I', p.policyname, p.tablename);
+  end loop;
+end $$;
+
 -- ---------- PROFILES ----------
 -- Lecture publique (nom, note...), mais on ne modifie que SON profil.
 create policy "profiles_select_all"  on public.profiles

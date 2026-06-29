@@ -24,14 +24,16 @@ class AuthController extends AsyncNotifier<void> {
   /// Connexion email + mot de passe. En cas de succès, arme la 2FA.
   Future<AuthResult> signIn(String email, String password) async {
     state = const AsyncLoading();
-    // On arme la 2FA AVANT l'appel : l'événement d'auth déclenche la
-    // redirection du router, qui doit déjà voir otpPending = true.
-    ref.read(otpPendingProvider.notifier).set(true);
+    // Comptes démo : connexion directe (pas de 2FA). Sinon on arme la 2FA
+    // AVANT l'appel : l'événement d'auth déclenche la redirection du router,
+    // qui doit déjà voir otpPending = true.
+    final isDemo = DemoAccounts.isDemo(email);
+    if (!isDemo) ref.read(otpPendingProvider.notifier).set(true);
     try {
       final res = await _repo.signIn(email: email, password: password);
       state = const AsyncData(null);
       if (res.session != null) {
-        ref.read(otpControllerProvider.notifier).generate();
+        if (!isDemo) ref.read(otpControllerProvider.notifier).generate();
         return const AuthResult(success: true, hasSession: true);
       }
       ref.read(otpPendingProvider.notifier).set(false);

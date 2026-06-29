@@ -27,25 +27,35 @@ Ce document est la **source de vérité vivante** du projet. Il est mis à jour 
 `producteur` · `commercant` · `consommateur` · `livreur` · `admin`
 (stockés dans `profiles.role`).
 
-### 🎨 Charte graphique (design system)
-Inspirée des templates **Foodly UI** et **Rive Animated App** (Abu Anwar /
-The Flutter Way) — couleurs **extraites de leur code source**. Police **Poppins**.
+### 🎨 Charte graphique (design system) — **refonte « marché ivoirien »**
+Palette **tons terre chauds** (terracotta / ocre / beige profond), surfaces
+**crème**, cartes blanches à **ombres douces**, sémantiques complètes.
+On garde l'esprit des templates (Foodly + Rive) mais en **plus riche et coloré**,
+façon vraie app de production. Police **Poppins** (`google_fonts`).
 
-| Couleur | Hex | Usage |
-|---------|-----|-------|
-| Vert (primary) | `#22A45D` | Couleur de marque, boutons, accents |
-| Orange (accent) | `#EF9920` | Accent secondaire, badges |
-| Titre | `#010F07` | Texte principal (clair) |
-| Body | `#868686` | Texte secondaire (clair) |
-| Input clair | `#FBFBFB` | Fond des champs (clair) |
-| Fond sombre | `#17203A` | Scaffold (sombre) — navy Rive |
-| Carte sombre | `#25254B` | Cartes / surfaces (sombre) |
-| Danger | `#E53935` | Erreurs / suppression |
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `clay` (primary / CTA) | `#E0703A` | Terracotta — boutons, actions, liens |
+| `clayDark` | `#C85A28` | Variante foncée (texte sur fond clair) |
+| `ocre` (accent) | `#F2A03D` | Ambre — accents, badges secondaires |
+| `beige` (marque) | `#C9A06B` | En-têtes, logo, aplats doux |
+| `cream` (fond clair) | `#FBF4EA` | Scaffold clair (blanc cassé chaud) |
+| `ink` (titres) | `#2A2018` | Texte principal (clair) |
+| `body` | `#867B6C` | Texte secondaire |
+| `inputLight` / `borderLight` | `#F6EEE1` / `#EFE5D6` | Champs & bordures (clair) |
+| `bgDark` / `cardDark` | `#1C1712` / `#27201A` | Scaffold & cartes (sombre, brun chaud) |
+| `success` / `warning` / `info` / `danger` | `#3FA86A` / `#E8A93C` / `#3E84C9` / `#E1493B` | Sémantiques |
 
-- Radius : champs/boutons/cartes arrondis (12–16). Boutons hauts (54 px).
-- **Mode sombre** complet (clair / sombre / système), persistant, bascule via
-  l'icône 🌙/☀️ dans l'AppBar.
-- Vert + orange = aussi les couleurs du drapeau ivoirien 🇨🇮.
+- **Dégradés** : `accentGradient` (CTA), `headerGradient` (bannières chaudes),
+  `brandGradient` (beige), `authGradient` (brun profond — onboarding).
+- **Badges** produits : Promo (`clay`), Halal (`success`), Frais (`info`).
+- Radius : champs/boutons 12, **cartes 18** (ombre douce, élévation visible).
+  Boutons hauts (54 px). Bottom nav M3 : indicateur teinté `clay`.
+- **Mode sombre** complet (clair / sombre / système), persistant 🌙/☀️.
+- **Compatibilité** : les anciens noms `AppColors.green` / `.orange` / `.title`
+  restent en **alias** (→ `clay` / `ocre` / `ink`) ; les écrans existants
+  adoptent donc la nouvelle palette sans modification.
+- Terracotta + ocre + beige = l'ambiance **terre / marché** ivoirien 🇨🇮.
 
 ---
 
@@ -102,6 +112,12 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `app_text_field.dart` | Champ de saisie stylé |
 | `app_loader.dart` | Chargement animé (3 points rebondissants) |
 | `animated_background.dart` | Fond animé (formes floutées en mouvement) |
+| `app_card.dart` | Carte standard (arrondie, ombre douce, tap) |
+| `app_badge.dart` | Badge pilule (Promo/Halal/Frais) + cloche de notif |
+| `section_header.dart` | Titre de section + action « Voir tout » |
+| `category_chip.dart` | Chip de catégorie colorée (sélectionnable) |
+| `skeleton.dart` | Squelettes *shimmer* (états de chargement) |
+| `empty_state.dart` | État vide illustré (icône + titre + action) |
 | `theme_toggle_button.dart` | Bouton bascule clair/sombre |
 | `guest_gate.dart` | Bouchon visiteur (invite à se connecter) |
 | **features/auth/** | |
@@ -137,7 +153,18 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `presentation/product_form_screen.dart` | Formulaire produit |
 | **features/home/** | |
 | `presentation/main_shell.dart` | Coquille + barre de navigation basse |
-| `presentation/home_feed_page.dart` | Onglet Accueil (style Foodly) |
+| `presentation/home_feed_page.dart` | **Accueil riche** (header, services, carrousel, sections vivantes, pull-to-refresh) |
+| **features/catalog/** | (consultation publique du catalogue) |
+| `domain/catalog_product.dart` | Produit + infos boutique (jointure) |
+| `domain/instant_request.dart` | Résumé d'une demande ouverte |
+| `domain/categories.dart` | Catégories (libellé + icône + couleur) |
+| `data/catalog_repository.dart` | Lecture produits/boutiques/demandes + providers |
+| `presentation/product_detail_screen.dart` | Fiche produit (Hero, actions gated) |
+| `presentation/shop_detail_screen.dart` | Fiche boutique + ses produits |
+| `presentation/search_screen.dart` | Recherche + filtres catégories |
+| `presentation/widgets/product_card.dart` | Carte produit riche (+ `ProductImage`) |
+| `presentation/widgets/shop_card.dart` | Carte boutique |
+| `features/auth/.../widgets/guest_invite_sheet.dart` | Modale visiteur + `requireAccount()` |
 
 > Les dossiers `features/{offers,reservations,orders,map,reviews,dashboard}`
 > existent (structure) mais seront remplis aux étapes suivantes.
@@ -149,6 +176,25 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 Fichiers SQL à exécuter dans **SQL Editor** (dans l'ordre) :
 1. [`supabase/schema.sql`](supabase/schema.sql) — tables, fonctions, triggers
 2. [`supabase/rls.sql`](supabase/rls.sql) — Row Level Security
+3. [`supabase/seed.sql`](supabase/seed.sql) — **données de démo** (comptes,
+   boutiques, produits, avis, demandes). Ré-exécutable.
+
+### 🌱 Comptes de démonstration (seed) — mot de passe commun `demo1234`
+| Email | Rôle | Lieu / boutique |
+|-------|------|-----------------|
+| `samira@demo.ci` | Consommatrice | Cocody |
+| `raoul@demo.ci` | Commerçant | « Chez Brou », Adjamé (marché Gouro) |
+| `jacob@demo.ci` | Producteur | « Ferme Kouamé », Agboville |
+| `kader@demo.ci` | Livreur | Yopougon |
+| `anais@demo.ci` | Commerçante | « Maquis Fatim », Treichville |
+
+- Le seed crée ces comptes **email confirmé** (connexion directe) + ~17 produits
+  répartis (céréales, légumes, plats préparés, poissons, féculents), des avis et
+  2 demandes en cours.
+- Ces comptes **bypassent la 2FA simulée** (connexion directe, via la constante
+  `DemoAccounts` côté app). La 2FA reste active pour une vraie inscription.
+- Alternative à la PARTIE A du seed : créer les 5 users via *Authentication >
+  Users > Add user* (cocher *Auto Confirm*), puis lancer la PARTIE B.
 
 ### Tables
 | Table          | Rôle |
@@ -217,7 +263,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 1 | Setup projet + structure + schéma SQL | ✅ Fait |
 | 2 | Auth (email + mdp + 2FA SMS simulée) + profils/rôle | ✅ Fait |
 | 3 | Boutiques + CRUD produits (stock) | ✅ Fait |
-| 4 | Catalogue, recherche, fiche produit | ⏳ |
+| 4 | Catalogue, recherche, fiche produit + boutique | ✅ Fait |
 | 5 | Demande instantanée (Realtime) + offres | ⏳ |
 | 6 | Réservation avec acompte (simulé) | ⏳ |
 | 7 | Géolocalisation (carte, tri proximité) | ⏳ |
@@ -226,6 +272,8 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 🎨 | Refonte UI (templates Foodly + Rive, dark mode) | ✅ Fait (3/3) |
 | ➕ | Accès visiteur + mini-tuto par rôle | ✅ Fait |
 | 🎬 | Animations (cahier des charges : fond, tap, succès…) | ✅ Fait |
+| 🎨 | Design system « marché ivoirien » + seed démo | ✅ Fait |
+| 🏠 | Accueil riche visiteur + catalogue + gating + bypass 2FA | ✅ Fait |
 
 ### Journal
 - **Étape 1** — Projet `dioula_market` initialisé (Flutter 3.32 / Dart 3.8).
@@ -351,6 +399,55 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - **Entrées animées légères** : fondu/glissement du contenu d'auth, des
     catégories et de la bannière de l'accueil, et de l'icône du tutoriel.
   - Dépendances ajoutées : `flutter_animate`, `confetti` (dans `pubspec.yaml`).
+  - Vérifié : `flutter analyze` = 0 problème.
+
+- **🎨 Refonte design system « marché ivoirien » (partie 1 — fondations)** :
+  - **Nouvelle palette riche** (`core/theme/app_colors.dart`) : terracotta
+    (`clay`, CTA), ocre (`ocre`), beige profond (`beige`), fond crème (`cream`),
+    `ink`/`body`, sémantiques `success`/`warning`/`info`/`danger`, badges
+    (Promo/Halal/Frais) et 4 dégradés. **Alias rétro-compat** (`green`→`clay`,
+    `orange`→`ocre`, `title`→`ink`) → les écrans existants adoptent la palette
+    sans modification.
+  - **Thème refondu** (`core/theme/app_theme.dart`) : scaffold crème, cartes à
+    **ombre douce** (élévation 6, radius 18), bottom nav **Material 3** stylée
+    (indicateur teinté), typographie Poppins avec hiérarchie (titres gras).
+  - **Composants clés** ajoutés : `AppCard`, `AppBadge` + `NotificationBell`,
+    `SectionHeader`, `CategoryChip`, `Skeleton`/`ProductCardSkeleton`,
+    `EmptyState`. (Prêts à assembler lors de la refonte des écrans.)
+  - Fond animé re-teinté en tons chauds.
+  - **Seed SQL** (`supabase/seed.sql`) : 5 comptes démo (email confirmé,
+    `demo1234`), 3 boutiques, ~17 produits, avis et 2 demandes. Ré-exécutable.
+    Constante `DemoAccounts` côté app (bypass 2FA à brancher à l'étape auth).
+  - Vérifié : `flutter analyze` = 0 problème.
+  - **Suite** : partie 2 = refonte des écrans (accueil riche visiteur,
+    sections vivantes, cartes produits) + parcours visiteur→tuto→app + bypass 2FA.
+
+- **🏠 Refonte des écrans (partie 2) — accueil riche + catalogue + parcours** :
+  - **Feature `catalog`** : `CatalogRepository` (lecture publique) + providers
+    `allProductsProvider`, `allShopsProvider`, `producerShopsProvider`,
+    `openRequestsProvider`, `shopProductsProvider`. Modèles `CatalogProduct`
+    (produit + boutique via jointure), `InstantRequest`, `categories`.
+  - **Accueil riche** (`home_feed_page.dart`, consultable en **visiteur**) :
+    en-tête (salutation + localisation + avatar + cloche notif), barre de
+    recherche, **services** (Recherche, Demande, Réserver, Vendre, Livraison),
+    **carrousel promo**, **catégories** colorées, et sections **En vedette /
+    Près de vous / Producteurs locaux / Meilleures notes / Demandes en cours**
+    (skeleton au chargement, états vides, **pull-to-refresh**, animations
+    d'apparition).
+  - **Cartes & écrans** : `ProductCard` (image **Hero**, badge frais/épuisé,
+    note, prix, bouton +), `ShopCard`, **fiche produit** (`ProductDetailScreen`,
+    image Hero, boutons Réserver/Demander), **fiche boutique**
+    (`ShopDetailScreen` : grille de produits), **recherche** (`SearchScreen` :
+    requête + filtres catégories).
+  - **Parcours visiteur** : tout est **consultable** sans compte ; **toute
+    action** (réserver, demander, suivre livraison, +) ouvre la **modale
+    d'invitation** (`guest_invite_sheet.dart`, helper `requireAccount`).
+  - **Bypass 2FA démo** : `AuthController.signIn` saute la 2FA pour les emails
+    de `DemoAccounts` (connexion directe) ; le login route vers OTP ou accueil
+    selon `otpPending`. La 2FA reste active pour une vraie inscription.
+  - Routes ajoutées : `/search`, `/product`, `/shop/view`.
+  - **Données** : alimenté par `supabase/seed.sql` (boutiques, produits, avis,
+    demandes). Images = placeholders `picsum.photos` (remplaçables).
   - Vérifié : `flutter analyze` = 0 problème.
 
 ---

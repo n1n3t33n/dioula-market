@@ -16,6 +16,11 @@ class AppRoutes {
   // Profil
   static const profile = '/profile';
 
+  // Catalogue (consultation publique)
+  static const search = '/search'; // recherche produits
+  static const productDetail = '/product'; // fiche produit (extra = CatalogProduct)
+  static const shopView = '/shop/view'; // fiche boutique (extra = shopId)
+
   // Boutiques & produits (espace propriétaire)
   static const myShop = '/shop';
   static const shopForm = '/shop/form';

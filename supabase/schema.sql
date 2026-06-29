@@ -39,6 +39,7 @@ create table if not exists public.profiles (
   updated_at  timestamptz not null default now()
 );
 
+drop trigger if exists trg_profiles_updated on public.profiles;
 create trigger trg_profiles_updated
   before update on public.profiles
   for each row execute function public.set_updated_at();
@@ -89,6 +90,7 @@ create table if not exists public.shops (
 );
 create index if not exists idx_shops_owner on public.shops(owner_id);
 
+drop trigger if exists trg_shops_updated on public.shops;
 create trigger trg_shops_updated
   before update on public.shops
   for each row execute function public.set_updated_at();
@@ -113,6 +115,7 @@ create table if not exists public.products (
 create index if not exists idx_products_shop on public.products(shop_id);
 create index if not exists idx_products_category on public.products(category);
 
+drop trigger if exists trg_products_updated on public.products;
 create trigger trg_products_updated
   before update on public.products
   for each row execute function public.set_updated_at();
@@ -140,6 +143,7 @@ create table if not exists public.requests (
 create index if not exists idx_requests_consumer on public.requests(consumer_id);
 create index if not exists idx_requests_status on public.requests(status);
 
+drop trigger if exists trg_requests_updated on public.requests;
 create trigger trg_requests_updated
   before update on public.requests
   for each row execute function public.set_updated_at();
@@ -165,6 +169,7 @@ create table if not exists public.offers (
 create index if not exists idx_offers_request on public.offers(request_id);
 create index if not exists idx_offers_merchant on public.offers(merchant_id);
 
+drop trigger if exists trg_offers_updated on public.offers;
 create trigger trg_offers_updated
   before update on public.offers
   for each row execute function public.set_updated_at();
@@ -193,6 +198,7 @@ create index if not exists idx_reservations_buyer on public.reservations(buyer_i
 create index if not exists idx_reservations_shop on public.reservations(shop_id);
 create index if not exists idx_reservations_status on public.reservations(status);
 
+drop trigger if exists trg_reservations_updated on public.reservations;
 create trigger trg_reservations_updated
   before update on public.reservations
   for each row execute function public.set_updated_at();
@@ -218,6 +224,7 @@ create index if not exists idx_orders_buyer on public.orders(buyer_id);
 create index if not exists idx_orders_shop on public.orders(shop_id);
 create index if not exists idx_orders_courier on public.orders(courier_id);
 
+drop trigger if exists trg_orders_updated on public.orders;
 create trigger trg_orders_updated
   before update on public.orders
   for each row execute function public.set_updated_at();

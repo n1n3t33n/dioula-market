@@ -7,6 +7,7 @@ import '../../../core/router/routes.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/primary_button.dart';
 import 'auth_controller.dart';
+import 'otp_controller.dart';
 import 'widgets/auth_scaffold.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -40,7 +41,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!mounted) return;
     setState(() => _loading = false);
     if (res.success && res.hasSession) {
-      context.go(AppRoutes.otp);
+      // Comptes démo : 2FA non armée → accès direct. Sinon → écran OTP.
+      final pending = ref.read(otpPendingProvider);
+      context.go(pending ? AppRoutes.otp : AppRoutes.home);
     } else if (!res.success) {
       setState(() => _shakeTick++);
       ScaffoldMessenger.of(context).showSnackBar(
