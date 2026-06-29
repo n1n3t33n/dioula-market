@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'app_loader.dart';
 
 /// Bouton principal (CTA) façon Foodly/Rive : plein, coins arrondis,
-/// état de chargement, et icône optionnelle (ex: flèche).
-class PrimaryButton extends StatelessWidget {
+/// **animation d'enfoncement au tap**, état de chargement animé (points
+/// rebondissants) et icône optionnelle (ex: flèche).
+class PrimaryButton extends StatefulWidget {
   const PrimaryButton({
     super.key,
     required this.label,
@@ -23,53 +25,81 @@ class PrimaryButton extends StatelessWidget {
   final bool gradient;
 
   @override
+  State<PrimaryButton> createState() => _PrimaryButtonState();
+}
+
+class _PrimaryButtonState extends State<PrimaryButton> {
+  double _scale = 1;
+
+  bool get _enabled => !widget.loading && widget.onPressed != null;
+
+  void _down(_) {
+    if (_enabled) setState(() => _scale = 0.96);
+  }
+
+  void _up([_]) {
+    if (_scale != 1) setState(() => _scale = 1);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final child = loading
+    final child = widget.loading
         ? const SizedBox(
             height: 22,
-            width: 22,
-            child: CircularProgressIndicator(
-                strokeWidth: 2, color: Colors.white),
+            child: AppLoader(color: Colors.white, size: 8),
           )
         : Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(label),
-              if (icon != null) ...[
+              Text(widget.label),
+              if (widget.icon != null) ...[
                 const SizedBox(width: 8),
-                Icon(icon, size: 20),
+                Icon(widget.icon, size: 20),
               ],
             ],
           );
 
-    if (!gradient) {
-      return FilledButton(
-        onPressed: loading ? null : onPressed,
+    final Widget button;
+    if (!widget.gradient) {
+      button = FilledButton(
+        onPressed: widget.loading ? null : widget.onPressed,
         child: child,
+      );
+    } else {
+      // Variante dégradé : on enveloppe un FilledButton transparent.
+      button = DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppColors.accentGradient,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.green.withValues(alpha: 0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: FilledButton(
+          onPressed: widget.loading ? null : widget.onPressed,
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
+          ),
+          child: child,
+        ),
       );
     }
 
-    // Variante dégradé : on enveloppe un FilledButton transparent.
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: AppColors.accentGradient,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.green.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: FilledButton(
-        onPressed: loading ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          foregroundColor: Colors.white,
-        ),
-        child: child,
+    return Listener(
+      onPointerDown: _down,
+      onPointerUp: _up,
+      onPointerCancel: _up,
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeOut,
+        child: button,
       ),
     );
   }

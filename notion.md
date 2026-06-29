@@ -20,6 +20,7 @@ Ce document est la **source de vérité vivante** du projet. Il est mis à jour 
 | Auth          | Email + mot de passe + **2FA SMS simulée**         |
 | Paiement      | **Simulé** (acompte de réservation)                |
 | Carte / Géo   | Haversine SQL + (à venir) `flutter_map` (OSM)      |
+| Animations    | `flutter_animate` (effets natifs) + `confetti`     |
 | Env / secrets | `flutter_dotenv` (`.env` non commité)              |
 
 ### Rôles utilisateurs
@@ -97,19 +98,31 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `app_theme.dart` | Thèmes Material 3 **clair & sombre** (Poppins) |
 | `theme_provider.dart` | `ThemeMode` persistant (toggle dark mode) |
 | **core/widgets/** | (composants UI réutilisables) |
-| `primary_button.dart` | Bouton CTA (plein / dégradé, chargement) |
+| `primary_button.dart` | Bouton CTA (plein / dégradé, **animation au tap**, chargement) |
 | `app_text_field.dart` | Champ de saisie stylé |
+| `app_loader.dart` | Chargement animé (3 points rebondissants) |
+| `animated_background.dart` | Fond animé (formes floutées en mouvement) |
 | `theme_toggle_button.dart` | Bouton bascule clair/sombre |
+| `guest_gate.dart` | Bouchon visiteur (invite à se connecter) |
 | **features/auth/** | |
 | `data/auth_repository.dart` | signUp / signIn / signOut (Supabase) |
-| `presentation/auth_controller.dart` | Logique d'auth + déclenchement 2FA |
+| `presentation/auth_controller.dart` | Logique d'auth + 2FA + tuto + visiteur |
 | `presentation/otp_controller.dart` | 2FA simulée (génère/vérifie le code) |
+| `presentation/guest_provider.dart` | Mode visiteur (`guestMode`, `isGuest`) |
+| `presentation/welcome_screen.dart` | Onboarding (accueil non connecté) |
 | `presentation/login_screen.dart` | Écran de connexion |
 | `presentation/register_screen.dart` | Inscription (avec choix du rôle) |
-| `presentation/otp_screen.dart` | Saisie du code 2FA |
+| `presentation/otp_screen.dart` | Saisie du code 2FA (+ secousse si code erroné) |
+| `presentation/success_screen.dart` | Succès 2FA : coche animée + **confettis** |
+| `presentation/widgets/auth_scaffold.dart` | Gabarit commun auth (fond animé + entrée) |
 | **features/profile/** | |
 | `domain/profile.dart` | Modèle `Profile` (rôle, géoloc, note) |
 | `data/profile_repository.dart` | Lecture/MAJ profil + `currentProfileProvider` |
+| `presentation/profile_page.dart` | Onglet Profil (infos + paramètres) |
+| **features/tutorial/** | |
+| `domain/tutorial_step.dart` | Étapes du tuto **par rôle** (logique métier) |
+| `presentation/tutorial_provider.dart` | Tuto en attente après inscription |
+| `presentation/tutorial_screen.dart` | Écran du mini-tutoriel (PageView) |
 | **features/shops/** | |
 | `domain/shop.dart` | Modèle `Shop` (+ `fromMap`, `toWriteMap`, `copyWith`) |
 | `data/shop_repository.dart` | CRUD boutique + `myShopProvider` |
@@ -123,7 +136,8 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `presentation/products_screen.dart` | Liste des produits + suppression |
 | `presentation/product_form_screen.dart` | Formulaire produit |
 | **features/home/** | |
-| `presentation/home_screen.dart` | Accueil (profil + accès fonctionnalités) |
+| `presentation/main_shell.dart` | Coquille + barre de navigation basse |
+| `presentation/home_feed_page.dart` | Onglet Accueil (style Foodly) |
 
 > Les dossiers `features/{offers,reservations,orders,map,reviews,dashboard}`
 > existent (structure) mais seront remplis aux étapes suivantes.
@@ -209,7 +223,9 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 7 | Géolocalisation (carte, tri proximité) | ⏳ |
 | 8 | Notation croisée 5 étoiles | ⏳ |
 | 9 | Dashboard commerçant | ⏳ |
-| 🎨 | Refonte UI (templates Foodly + Rive, dark mode) | 🔄 En cours (1/3) |
+| 🎨 | Refonte UI (templates Foodly + Rive, dark mode) | ✅ Fait (3/3) |
+| ➕ | Accès visiteur + mini-tuto par rôle | ✅ Fait |
+| 🎬 | Animations (cahier des charges : fond, tap, succès…) | ✅ Fait |
 
 ### Journal
 - **Étape 1** — Projet `dioula_market` initialisé (Flutter 3.32 / Dart 3.8).
@@ -269,6 +285,74 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - Vérifié : `flutter analyze` = 0 problème, test au vert.
   - Suite : Partie 2 (auth/onboarding), Partie 3 (app principale).
 
+- **🎨 Refonte UI — Partie 2/3 : Auth & onboarding** (style template Rive) :
+  - `features/auth/presentation/widgets/auth_scaffold.dart` : gabarit commun
+    (fond **dégradé navy**, barre haut avec retour + bascule thème, logo, titre,
+    sous-titre, carte du formulaire). Réutilisé par tous les écrans d'auth.
+  - **Nouvel écran d'accueil (onboarding)** `welcome_screen.dart` : point d'entrée
+    des visiteurs non connectés, 2 CTA (Se connecter / Créer un compte).
+  - `login_screen` / `register_screen` / `otp_screen` **refondus** avec le nouveau
+    style (champs `AppTextField`, boutons `PrimaryButton`) — **logique inchangée**.
+  - Router : route `/welcome` + redirection mise à jour (non connecté → welcome).
+  - Le mode sombre s'applique automatiquement aux écrans d'auth (carte
+    blanche/sombre sur le dégradé).
+  - Vérifié : `flutter analyze` = 0 problème, test au vert.
+  - Suite : Partie 3 (app principale : bottom-nav + home + boutiques/produits).
+
+- **🎨 Refonte UI — Partie 3/3 : App principale** (style template Foodly) :
+  - `features/home/presentation/main_shell.dart` : **coquille** avec
+    **barre de navigation basse** (NavigationBar) → onglets *Accueil / Boutique /
+    Profil* en `IndexedStack` (garde l'état). Remplace l'ancien `home_screen.dart`
+    (supprimé).
+  - `features/home/presentation/home_feed_page.dart` : **accueil façon Foodly** —
+    salutation + avatar, barre de recherche, catégories horizontales, bannière
+    promo (Demande instantanée), raccourcis (boutique actif, reste grisé).
+  - `features/profile/presentation/profile_page.dart` : profil (avatar, rôle,
+    email/tél) + **paramètres** (interrupteur mode sombre, accès boutique,
+    déconnexion).
+  - `products_screen.dart` : cartes produits **restylées** (vignette image via
+    `cached_network_image`, prix en vert, badge de stock).
+  - Tous les écrans existants profitent automatiquement du nouveau thème
+    clair/sombre. **Aucune logique métier modifiée.**
+  - Vérifié : `flutter analyze` = 0 problème, test au vert.
+  - ✅ **Refonte front-end terminée (3/3).**
+
+- **➕ Accès visiteur + mini-tutoriel par rôle** :
+  - **Accès visiteur** : bouton « Continuer en visiteur » sur l'accueil →
+    `guestModeProvider` ; le router laisse explorer l'app sans compte.
+    `isGuestProvider` verrouille les sections réservées (Ma boutique, Profil)
+    via le widget `GuestGate` (invite à se connecter / s'inscrire). L'accueil
+    affiche « Visiteur ».
+  - **Mini-tutoriel par rôle** (logique métier) : `tutorialStepsForRole(role)`
+    renvoie 4 étapes différentes selon Producteur / Commerçant / Consommateur /
+    Livreur. Affiché **une fois après l'inscription** (via `pendingTutorialProvider`,
+    armé à l'inscription, consommé après l'OTP) et **« Revoir le tutoriel »**
+    dans le profil. Écran `TutorialScreen` (PageView + points + Passer/Commencer).
+  - Le logout réinitialise mode visiteur + tuto en attente.
+  - Vérifié : `flutter analyze` = 0 problème, test au vert.
+
+- **🎬 Animations (direction design du cahier des charges)** — reprise des
+  effets du template Rive, **recréés en natif** avec `flutter_animate` +
+  `confetti` (aucun asset payant, aucun fichier externe à télécharger) :
+  - **Fond animé à formes floutées** (`core/widgets/animated_background.dart`) :
+    grandes bulles vertes/orange qui dérivent et pulsent en boucle derrière un
+    flou ; utilisé sur l'auth, l'onboarding et l'écran de succès.
+  - **Bouton animé au tap** : `PrimaryButton` s'enfonce légèrement (scale) à
+    l'appui ; en chargement il affiche `AppLoader` (3 points rebondissants).
+  - **Animation d'erreur** : secousse (*shake*) du formulaire (login / register)
+    et du champ code (OTP) quand la saisie est refusée.
+  - **Succès + confettis** (`features/auth/.../success_screen.dart`, route
+    `/success`) : après la 2FA, coche verte en rebond élastique + confettis,
+    puis redirection auto vers le tutoriel (ou l'accueil).
+  - **Icônes animées dans la bottom nav** : l'icône sélectionnée rebondit
+    (élastique) à chaque changement d'onglet.
+  - **Transitions fluides entre écrans** : toutes les routes go_router passent
+    par une transition fondu + léger glissement (`pageBuilder` + `_fade`).
+  - **Entrées animées légères** : fondu/glissement du contenu d'auth, des
+    catégories et de la bannière de l'accueil, et de l'icône du tutoriel.
+  - Dépendances ajoutées : `flutter_animate`, `confetti` (dans `pubspec.yaml`).
+  - Vérifié : `flutter analyze` = 0 problème.
+
 ---
 
 ## 7. Notes & décisions
@@ -277,6 +361,11 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   possible plus tard (extension commentée dans `schema.sql`).
 - **Paiement & SMS** : 100 % simulés pour la soutenance ; branchements réels
   (provider SMS, paiement mobile money) prévus après.
+- **Animations** : effets du template Rive **recréés en natif** avec
+  `flutter_animate` (+ `confetti` pour le succès). Choix volontaire de **ne pas**
+  utiliser de fichiers Lottie externes pour garder la démo robuste (aucun
+  téléchargement d'asset). On peut ajouter des `.json` Lottie gratuits plus tard
+  si besoin, sans rien casser.
 - **Git** : tous les commits/push sont faits manuellement (aucune commande git
   exécutée automatiquement).
 
@@ -323,6 +412,29 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   *Ex. : on y garde le mode de thème choisi (`theme_mode`).*
 - **Dégradé (gradient)** — Transition douce entre plusieurs couleurs.
   *Ex. : le fond navy de l'écran d'accueil/onboarding (façon Rive).*
+- **Onboarding** — Premier(s) écran(s) d'accueil avant de se connecter.
+  *Ex. : `WelcomeScreen` avec « Se connecter » / « Créer un compte ».*
+- **Barre de navigation basse (bottom nav)** — Les onglets en bas de l'écran.
+  *Ex. : Accueil / Boutique / Profil (widget `NavigationBar`).*
+- **IndexedStack** — Empile les écrans et n'en montre qu'un (garde leur état).
+  *Ex. : changer d'onglet sans recharger la page précédente.*
+- **Mode visiteur (guest)** — Explorer l'app sans compte (lecture seule).
+  *Ex. : « Continuer en visiteur » ; Ma boutique/Profil restent verrouillés.*
+- **Tutoriel par rôle** — Mini-guide d'accueil dont le contenu dépend du rôle.
+  *Ex. : un Livreur et un Consommateur voient des étapes différentes.*
+- **flutter_animate** — Package d'animations « en chaîne » (fondu, glissement,
+  rebond, secousse…) sans gérer soi-même les contrôleurs.
+  *Ex. : `widget.animate().fadeIn().slideY()` fait apparaître un widget en
+  douceur.*
+- **confetti** — Package qui projette des confettis à l'écran.
+  *Ex. : explosion de confettis sur l'écran de succès après la 2FA.*
+- **Lottie** — Format d'animations vectorielles (fichiers `.json`). Non utilisé
+  ici (effets recréés en natif) mais possible plus tard. *Ex. : une coche
+  animée téléchargée depuis LottieFiles.*
+- **Transition de page** — Animation entre deux écrans (ici fondu + glissement).
+  *Ex. : passer de `/login` à `/otp` se fait en fondu, pas d'un coup sec.*
+- **Shake (secousse)** — Petite animation de tremblement signalant une erreur.
+  *Ex. : le formulaire de connexion tremble si le mot de passe est faux.*
 
 ### B. Architecture & gestion d'état
 - **Architecture feature-first** — Organiser le code par fonctionnalité plutôt

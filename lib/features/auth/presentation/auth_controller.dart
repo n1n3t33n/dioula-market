@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_constants.dart';
+import '../../tutorial/presentation/tutorial_provider.dart';
 import '../data/auth_repository.dart';
+import 'guest_provider.dart';
 import 'otp_controller.dart';
 
 /// Résultat simple d'une action d'authentification.
@@ -60,6 +63,10 @@ class AuthController extends AsyncNotifier<void> {
       );
       state = const AsyncData(null);
       if (res.session != null) {
+        // Inscription réussie avec session : on arme le tutoriel du rôle.
+        ref
+            .read(pendingTutorialProvider.notifier)
+            .set(UserRole.fromValue(role));
         ref.read(otpControllerProvider.notifier).generate();
         return const AuthResult(success: true, hasSession: true);
       }
@@ -81,6 +88,9 @@ class AuthController extends AsyncNotifier<void> {
     await _repo.signOut();
     ref.read(otpPendingProvider.notifier).set(false);
     ref.read(otpControllerProvider.notifier).clear();
+    ref.read(pendingTutorialProvider.notifier).set(null);
+    // On quitte aussi le mode visiteur → retour à l'écran d'accueil.
+    ref.read(guestModeProvider.notifier).set(false);
   }
 
   String _humanize(Object e) {

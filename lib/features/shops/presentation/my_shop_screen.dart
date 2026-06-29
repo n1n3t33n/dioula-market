@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/guest_gate.dart';
+import '../../auth/presentation/guest_provider.dart';
 import '../data/shop_repository.dart';
 
 /// Écran « Ma boutique ».
@@ -14,6 +16,19 @@ class MyShopScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Mode visiteur : section réservée aux comptes.
+    if (ref.watch(isGuestProvider)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Ma boutique')),
+        body: const GuestGate(
+          icon: Icons.storefront_outlined,
+          title: 'Réservé aux membres',
+          message:
+              'Connecte-toi ou crée un compte (Commerçant/Producteur) pour ouvrir ta boutique et gérer tes produits.',
+        ),
+      );
+    }
+
     final shopAsync = ref.watch(myShopProvider);
 
     return Scaffold(

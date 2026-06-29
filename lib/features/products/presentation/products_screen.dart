@@ -1,9 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../shops/data/shop_repository.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
@@ -81,22 +82,62 @@ class _ProductTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lowStock = product.stock <= 0;
     return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.green.withValues(alpha: 0.15),
-          child: const Icon(Icons.shopping_basket_outlined,
-              color: AppTheme.green),
-        ),
-        title: Text(product.name),
-        subtitle: Text(
-          '${product.price.toStringAsFixed(0)} FCFA / ${product.unit}'
-          '  •  Stock : ${product.stock.toStringAsFixed(0)}'
-          '${lowStock ? " (épuisé)" : ""}',
-          style: TextStyle(color: lowStock ? Colors.red : null),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Row(
           children: [
+            // Vignette produit (image si fournie, sinon icône).
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                height: 64,
+                width: 64,
+                child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: product.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => const _Placeholder(),
+                        placeholder: (_, __) => const _Placeholder(),
+                      )
+                    : const _Placeholder(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Infos
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(product.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  if (product.category != null &&
+                      product.category!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(product.category!,
+                        style: const TextStyle(
+                            color: AppColors.body, fontSize: 12)),
+                  ],
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(
+                        '${product.price.toStringAsFixed(0)} FCFA',
+                        style: const TextStyle(
+                            color: AppColors.green,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Text(' / ${product.unit}',
+                          style: const TextStyle(color: AppColors.body)),
+                      const SizedBox(width: 8),
+                      _StockBadge(stock: product.stock, low: lowStock),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Actions
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Modifier',
@@ -106,7 +147,7 @@ class _ProductTile extends ConsumerWidget {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              icon: const Icon(Icons.delete_outline, color: AppColors.danger),
               tooltip: 'Supprimer',
               onPressed: () => _confirmDelete(context, ref),
             ),
@@ -135,5 +176,42 @@ class _ProductTile extends ConsumerWidget {
     if (ok == true) {
       await ref.read(productControllerProvider.notifier).delete(product);
     }
+  }
+}
+
+/// Vignette par défaut quand le produit n'a pas d'image.
+class _Placeholder extends StatelessWidget {
+  const _Placeholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.green.withValues(alpha: 0.12),
+      child: const Icon(Icons.shopping_basket_outlined,
+          color: AppColors.green),
+    );
+  }
+}
+
+/// Petit badge d'état du stock (disponible / épuisé).
+class _StockBadge extends StatelessWidget {
+  const _StockBadge({required this.stock, required this.low});
+  final double stock;
+  final bool low;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = low ? AppColors.danger : AppColors.green;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        low ? 'Épuisé' : 'Stock ${stock.toStringAsFixed(0)}',
+        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
+      ),
+    );
   }
 }

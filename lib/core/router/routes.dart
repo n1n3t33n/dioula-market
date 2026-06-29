@@ -5,10 +5,13 @@ class AppRoutes {
 
   static const home = '/';
 
-  // Auth (étape 1 fonctionnelle — à venir)
+  // Auth
+  static const welcome = '/welcome'; // onboarding (non connecté)
   static const login = '/login';
   static const register = '/register';
   static const otp = '/otp'; // 2FA SMS simulée
+  static const success = '/success'; // succès + confettis (après 2FA)
+  static const tutorial = '/tutorial'; // mini-tuto par rôle (après inscription)
 
   // Profil
   static const profile = '/profile';
