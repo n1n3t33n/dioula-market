@@ -14,6 +14,7 @@ import '../../features/catalog/presentation/product_detail_screen.dart';
 import '../../features/catalog/presentation/search_screen.dart';
 import '../../features/catalog/presentation/shop_detail_screen.dart';
 import '../../features/home/presentation/main_shell.dart';
+import '../../features/map/presentation/nearby_map_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/reservations/presentation/fake_payment_screen.dart';
 import '../../features/reservations/presentation/my_reservations_screen.dart';
@@ -196,6 +197,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'notifications',
         pageBuilder: (context, state) =>
             _fade(state, const NotificationsScreen()),
+      ),
+
+      // --- Carte de proximité (géolocalisation) ---
+      GoRoute(
+        path: AppRoutes.map,
+        name: 'map',
+        pageBuilder: (context, state) =>
+            _fade(state, const NearbyMapScreen()),
       ),
       GoRoute(
         path: AppRoutes.tutorial,

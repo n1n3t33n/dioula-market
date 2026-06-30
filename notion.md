@@ -19,7 +19,7 @@ Ce document est la **source de vérité vivante** du projet. Il est mis à jour 
 | Backend       | **Supabase** (Postgres, Auth, Storage, Realtime)   |
 | Auth          | Email + mot de passe + **2FA SMS simulée**         |
 | Paiement      | **Simulé** (acompte de réservation)                |
-| Carte / Géo   | Haversine SQL + (à venir) `flutter_map` (OSM)      |
+| Carte / Géo   | Haversine SQL + `flutter_map` (OSM) + `geolocator` (GPS) |
 | Animations    | `flutter_animate` (effets natifs) + `confetti`     |
 | Env / secrets | `flutter_dotenv` (`.env` non commité)              |
 
@@ -187,8 +187,14 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `data/notifications_repository.dart` | Flux temps réel + non-lues + mark read |
 | `presentation/notification_bell_button.dart` | Cloche + badge (connectée) |
 | `presentation/notifications_screen.dart` | Liste des notifications |
+| **features/map/** | (géolocalisation — carte de proximité) |
+| `domain/nearby_shop.dart` | Boutique proche (position + distance calculée) |
+| `data/location_service.dart` | Position GPS réelle (`geolocator`) + permissions |
+| `data/map_repository.dart` | RPC `nearby_shops` + providers (position, rayon) |
+| `presentation/nearby_map_screen.dart` | Carte OSM + marqueurs + liste triée par distance |
+| `presentation/widgets/nearby_shop_tile.dart` | Ligne « boutique proche » (distance, note) |
 
-> Les dossiers `features/{orders,map,reviews,dashboard}`
+> Les dossiers `features/{orders,reviews,dashboard}`
 > existent (structure) mais seront remplis aux étapes suivantes.
 
 ---
@@ -296,7 +302,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 4 | Catalogue, recherche, fiche produit + boutique | ✅ Fait |
 | 5 | Demande instantanée (Realtime) + offres + acceptation | ✅ Fait |
 | 6 | Réservation avec acompte (simulé) + automatisations stock | ✅ Fait |
-| 7 | Géolocalisation (carte, tri proximité) | ⏳ |
+| 7 | Géolocalisation (carte, tri proximité) | ✅ Fait |
 | 8 | Notation croisée 5 étoiles | ⏳ |
 | 9 | Dashboard commerçant | ⏳ |
 | 🎨 | Refonte UI (templates Foodly + Rive, dark mode) | ✅ Fait (3/3) |
@@ -307,6 +313,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | ⚡ | Demande instantanée : publication + Realtime + offres + acceptation | ✅ Fait |
 | 🎟️ | Réservation + acompte simulé + annulation 12h + stock auto | ✅ Fait |
 | 🔔 | Notifications in-app temps réel (offres, réservations, stock) | ✅ Fait |
+| 🗺️ | Géolocalisation : carte de proximité (flutter_map/OSM) + GPS réel + tri distance | ✅ Fait |
 
 ### Journal
 - **Étape 1** — Projet `dioula_market` initialisé (Flutter 3.32 / Dart 3.8).
@@ -548,11 +555,35 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - **SQL à exécuter** : `supabase/step6.sql`.
   - Vérifié : `flutter analyze` = 0 problème.
 
+- **🗺️ Étape 7 — Géolocalisation (carte de proximité + tri par distance)** :
+  - **Feature `map`** : modèle `NearbyShop` (boutique + distance), `LocationService`
+    (position GPS **réelle** via `geolocator`, gestion des permissions avec
+    messages d'erreur lisibles), `MapRepository` (appel de la fonction SQL
+    `nearby_shops` — Haversine côté serveur) + providers Riverpod
+    (`currentPositionProvider`, `selectedRadiusProvider`, `nearbyShopsProvider`).
+  - **Écran carte** (`nearby_map_screen.dart`) : carte **OpenStreetMap**
+    (`flutter_map`, sans clé API) centrée sur la position, **marqueur
+    utilisateur** + un **marqueur par boutique** (tap → fiche boutique), **chips
+    de rayon** (5 / 10 / 25 km / Tout) et **liste triée par distance** sous la
+    carte. Bouton **« recentrer »**. États gérés : localisation en cours, erreur
+    (permission refusée → « Réessayer » / « Ouvrir les réglages »), liste vide
+    (→ bouton **« Tout voir »** qui élargit le rayon).
+  - **Câblage** : route `/map` enregistrée ; service **« Carte »** sur l'accueil
+    (consultable en visiteur) + action **« Voir la carte »** sur la section
+    « Près de vous ».
+  - **Permissions natives** : `ACCESS_FINE/COARSE_LOCATION` (Android),
+    `NSLocationWhenInUseUsageDescription` (iOS). Web : autorisation navigateur.
+  - **Aucun SQL à exécuter** : `nearby_shops` / `distance_km` sont déjà dans
+    `schema.sql` ; les boutiques du seed ont déjà leurs coordonnées.
+  - Dépendances ajoutées : `flutter_map`, `latlong2`, `geolocator`.
+  - Vérifié : `flutter analyze` = 0 problème.
+
 ---
 
 ## 7. Notes & décisions
 
-- **Géoloc** : on commence simple (lat/lng + Haversine SQL). PostGIS reste
+- **Géoloc** : lat/lng + Haversine SQL (`distance_km` / `nearby_shops`). La carte
+  utilise `flutter_map` (OSM, sans clé) + `geolocator` (GPS réel). PostGIS reste
   possible plus tard (extension commentée dans `schema.sql`).
 - **Paiement & SMS** : 100 % simulés pour la soutenance ; branchements réels
   (provider SMS, paiement mobile money) prévus après.
@@ -721,6 +752,19 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   *Ex. : `distance_km(lat1,lng1,lat2,lng2)` calcule la distance en km.*
 - **Rayon (radius)** — Distance maximale de recherche.
   *Ex. : une demande « oignons, rayon 10 km » cherche les boutiques ≤ 10 km.*
+- **OpenStreetMap (OSM)** — Carte du monde libre et gratuite (sans clé API).
+  *Ex. : les tuiles de la carte « Autour de moi » viennent d'OpenStreetMap.*
+- **flutter_map** — Package Flutter qui affiche une carte interactive (zoom,
+  déplacement) à partir de tuiles OSM. *Ex. : l'écran `NearbyMapScreen`.*
+- **geolocator** — Package qui lit la **position GPS réelle** de l'appareil et
+  gère les permissions. *Ex. : `LocationService.current()` renvoie ta position.*
+- **Marqueur (marker)** — Épingle/pastille posée sur la carte à une position.
+  *Ex. : un marqueur terracotta par boutique, un point bleu pour toi.*
+- **Tuile (tile)** — Petite image carrée assemblée pour former la carte.
+  *Ex. : `tile.openstreetmap.org/{z}/{x}/{y}.png`.*
+- **Permission de localisation** — Autorisation demandée à l'utilisateur pour
+  accéder au GPS. *Ex. : Android `ACCESS_FINE_LOCATION`, iOS
+  `NSLocationWhenInUseUsageDescription`.*
 
 ### F. Spécifique au projet
 - **Demande instantanée** — Un consommateur publie un besoin, les commerçants

@@ -110,6 +110,8 @@ class HomeFeedPage extends ConsumerWidget {
                 child: SectionHeader(
                   title: 'Près de vous',
                   subtitle: 'Boutiques & marchés',
+                  actionLabel: 'Voir la carte',
+                  onAction: () => context.push(AppRoutes.map),
                 ),
               ),
               const SizedBox(height: 12),
@@ -314,6 +316,9 @@ class _ServicesRow extends ConsumerWidget {
       // Consommateur + visiteur.
       services = [
         search,
+        // Carte de proximité : consultable sans compte.
+        _Service(Icons.map, 'Carte', AppColors.info,
+            () => context.push(AppRoutes.map)),
         _Service(Icons.bolt, 'Demande', AppColors.clay, () {
           if (requireAccount(context, ref, action: 'publier une demande')) {
             context.push(AppRoutes.requests);
