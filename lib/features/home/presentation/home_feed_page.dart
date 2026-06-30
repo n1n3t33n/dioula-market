@@ -282,10 +282,6 @@ class _ServicesRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    void soon(String label) => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$label — bientôt 🚧')),
-        );
-
     final isGuest = ref.watch(isGuestProvider);
     final role = isGuest
         ? UserRole.consommateur
@@ -310,7 +306,9 @@ class _ServicesRow extends ConsumerWidget {
       services = [
         search,
         _Service(Icons.local_shipping, 'Courses', AppColors.clay,
-            () => soon('Courses')),
+            () => context.push(AppRoutes.courses)),
+        _Service(Icons.map, 'Carte', AppColors.info,
+            () => context.push(AppRoutes.map)),
       ];
     } else {
       // Consommateur + visiteur.
@@ -329,9 +327,9 @@ class _ServicesRow extends ConsumerWidget {
             context.push(AppRoutes.reservations);
           }
         }),
-        _Service(Icons.local_shipping, 'Livraison', AppColors.beigeDeep, () {
-          if (requireAccount(context, ref, action: 'suivre une livraison')) {
-            soon('Livraison');
+        _Service(Icons.receipt_long, 'Commandes', AppColors.beigeDeep, () {
+          if (requireAccount(context, ref, action: 'suivre tes commandes')) {
+            context.push(AppRoutes.orders);
           }
         }),
       ];

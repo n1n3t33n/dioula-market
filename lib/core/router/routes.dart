@@ -46,4 +46,8 @@ class AppRoutes {
 
   // Dashboard commerçant
   static const dashboard = '/dashboard';
+
+  // Livraison / commandes
+  static const orders = '/orders'; // mes commandes (acheteur)
+  static const courses = '/courses'; // espace livreur (pool + mes courses)
 }

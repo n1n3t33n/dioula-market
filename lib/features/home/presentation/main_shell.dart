@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/env.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/guest_provider.dart';
+import '../../orders/presentation/courier_courses_screen.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/presentation/profile_page.dart';
 import '../../requests/presentation/requests_hub_screen.dart';
@@ -65,12 +65,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           Icons.local_shipping_outlined,
           Icons.local_shipping,
           'Courses',
-          _ComingSoon(
-            icon: Icons.local_shipping_outlined,
-            title: 'Courses de livraison',
-            message:
-                'Le pool de livraisons disponibles arrive à l\'étape suivante.',
-          ),
+          CourierCoursesScreen(),
         ),
         const _NavTab(
             Icons.person_outline, Icons.person, 'Profil', ProfilePage()),
@@ -118,26 +113,6 @@ class _NavTab {
   final IconData selectedIcon;
   final String label;
   final Widget page;
-}
-
-/// Écran « bientôt disponible » (onglets en cours de construction).
-class _ComingSoon extends StatelessWidget {
-  const _ComingSoon({
-    required this.icon,
-    required this.title,
-    required this.message,
-  });
-  final IconData icon;
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: EmptyState(icon: icon, title: title, message: message),
-    );
-  }
 }
 
 class _NotConfigured extends StatelessWidget {

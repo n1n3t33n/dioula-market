@@ -201,9 +201,14 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `presentation/widgets/review_tile.dart` | Ligne d'avis (auteur, note, date, texte) |
 | **features/dashboard/** | (tableau de bord commerçant) |
 | `presentation/seller_dashboard_screen.dart` | Synthèse boutique : stats, stock bas, CA simulé |
+| **features/orders/** | (commandes & livraison — pool de livreurs) |
+| `domain/order.dart` | Modèle commande (+ boutique, acheteur, articles) |
+| `data/orders_repository.dart` | Pool / mes courses / mes commandes + RPC livraison |
+| `presentation/courier_courses_screen.dart` | Livreur : disponibles + mes courses |
+| `presentation/my_orders_screen.dart` | Acheteur : suivi de ses commandes |
+| `presentation/widgets/order_card.dart` | Carte commande (articles, adresse, statut) |
 
-> Le dossier `features/orders`
-> existe (structure) mais sera rempli à l'étape suivante (livraison).
+> Toutes les features prévues au déroulé sont désormais implémentées.
 
 ---
 
@@ -225,6 +230,10 @@ Fichiers SQL à exécuter dans **SQL Editor** (dans l'ordre) :
 6. [`supabase/step8.sql`](supabase/step8.sql) — **étape 8** : notation croisée —
    colonne `reviews.reservation_id` (+ anti-doublon), **recalcul auto** des
    moyennes (`shops`/`profiles`) par trigger, notification de nouvel avis.
+   Ré-exécutable (dépend de `push_notif` de step6).
+7. [`supabase/step10.sql`](supabase/step10.sql) — **étape 10** : livraison —
+   RLS « pool » pour les livreurs, fonctions `claim_order` / `mark_order_delivered`
+   (+ notifications), Realtime sur `orders`, et **2 commandes de démo**.
    Ré-exécutable (dépend de `push_notif` de step6).
 
 ### 🌱 Comptes de démonstration (seed) — mot de passe commun `demo1234`
@@ -317,6 +326,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 7 | Géolocalisation (carte, tri proximité) | ✅ Fait |
 | 8 | Notation croisée 5 étoiles | ✅ Fait |
 | 9 | Dashboard commerçant | ✅ Fait |
+| 10 | Livraison (pool de livreurs) | ✅ Fait |
 | 🎨 | Refonte UI (templates Foodly + Rive, dark mode) | ✅ Fait (3/3) |
 | ➕ | Accès visiteur + mini-tuto par rôle | ✅ Fait |
 | 🎬 | Animations (cahier des charges : fond, tap, succès…) | ✅ Fait |
@@ -328,6 +338,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 🗺️ | Géolocalisation : carte de proximité (flutter_map/OSM) + GPS réel + tri distance | ✅ Fait |
 | ⭐ | Notation croisée : acheteur↔vendeur après retrait + recalcul des moyennes | ✅ Fait |
 | 📊 | Dashboard commerçant : produits, stock bas, réservations, CA (simulé) | ✅ Fait |
+| 🛵 | Livraison : pool de livreurs (prise en charge → livrée) + suivi acheteur | ✅ Fait |
 
 ### Journal
 - **Étape 1** — Projet `dioula_market` initialisé (Flutter 3.32 / Dart 3.8).
@@ -622,6 +633,23 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
     bord »** de l'accueil (vendeur) ouvre l'écran (fin du placeholder « bientôt »).
   - Vérifié : `flutter analyze` = 0 problème.
 
+- **🛵 Étape 10 — Livraison (pool de livreurs)** :
+  - **Cycle de vie d'une commande** : créée à l'acceptation d'une offre
+    (*en_cours*) → un **livreur la prend** (`claim_order` → *en_livraison*) →
+    il la **marque livrée** (`mark_order_delivered` → *livree*).
+  - **Espace livreur** (`courier_courses_screen.dart`, onglet « Courses ») :
+    deux onglets **Disponibles** (le pool) et **Mes courses**. L'onglet
+    « bientôt » du livreur est remplacé par cet écran réel.
+  - **Suivi acheteur** (`my_orders_screen.dart`) : le service **« Commandes »**
+    de l'accueil (ex-« Livraison ») liste ses commandes avec leur **statut**.
+  - **Automatisations (SQL `step10.sql`)** : RLS additive pour que les livreurs
+    voient le **pool** (commandes non assignées), fonctions atomiques (verrou de
+    ligne pour éviter la double prise), **notifications** à l'acheteur et au
+    vendeur (en route / livrée), Realtime sur `orders`, **2 commandes de démo**
+    (amorcées si le pool est vide → kader a tout de suite des courses).
+  - **SQL à exécuter** : `supabase/step10.sql` (dépend de `step6.sql`).
+  - Vérifié : `flutter analyze` = 0 problème.
+
 ---
 
 ## 7. Notes & décisions
@@ -821,6 +849,12 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   mutuellement (5 étoiles). *Ex. : après un retrait, l'acheteur note la boutique
   et le vendeur note l'acheteur (étape 8) ; les moyennes sont recalculées par un
   trigger SQL.*
+- **Commande (order)** — Achat créé quand un consommateur accepte une offre.
+  *Ex. : table `orders` (+ `order_items`) ; statut `en_cours` → `en_livraison`
+  → `livree`.*
+- **Pool de livreurs** — File de commandes disponibles que n'importe quel
+  livreur peut prendre en charge. *Ex. : kader voit les courses « Disponibles »,
+  en prend une (verrou SQL anti-double-prise), puis la marque livrée (étape 10).*
 - **Stock** — Quantité disponible d'un produit.
   *Ex. : `products.stock = 50` (50 kg d'oignons en stock).*
 - **FCFA** — La monnaie (Franc CFA) utilisée pour les prix.
