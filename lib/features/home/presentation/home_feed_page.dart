@@ -304,7 +304,7 @@ class _ServicesRow extends ConsumerWidget {
         _Service(Icons.bolt, 'Demandes', AppColors.clay,
             () => context.push(AppRoutes.requests)),
         _Service(Icons.bar_chart, 'Tableau de bord', AppColors.success,
-            () => soon('Tableau de bord')),
+            () => context.push(AppRoutes.dashboard)),
       ];
     } else if (!isGuest && role.isCourier) {
       services = [

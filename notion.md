@@ -199,9 +199,11 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `presentation/rating_sheet.dart` | Feuille de notation (étoiles + commentaire) |
 | `presentation/widgets/star_rating.dart` | Étoiles (affichage + sélecteur) |
 | `presentation/widgets/review_tile.dart` | Ligne d'avis (auteur, note, date, texte) |
+| **features/dashboard/** | (tableau de bord commerçant) |
+| `presentation/seller_dashboard_screen.dart` | Synthèse boutique : stats, stock bas, CA simulé |
 
-> Les dossiers `features/{orders,dashboard}`
-> existent (structure) mais seront remplis aux étapes suivantes.
+> Le dossier `features/orders`
+> existe (structure) mais sera rempli à l'étape suivante (livraison).
 
 ---
 
@@ -314,7 +316,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 6 | Réservation avec acompte (simulé) + automatisations stock | ✅ Fait |
 | 7 | Géolocalisation (carte, tri proximité) | ✅ Fait |
 | 8 | Notation croisée 5 étoiles | ✅ Fait |
-| 9 | Dashboard commerçant | ⏳ |
+| 9 | Dashboard commerçant | ✅ Fait |
 | 🎨 | Refonte UI (templates Foodly + Rive, dark mode) | ✅ Fait (3/3) |
 | ➕ | Accès visiteur + mini-tuto par rôle | ✅ Fait |
 | 🎬 | Animations (cahier des charges : fond, tap, succès…) | ✅ Fait |
@@ -325,6 +327,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 🔔 | Notifications in-app temps réel (offres, réservations, stock) | ✅ Fait |
 | 🗺️ | Géolocalisation : carte de proximité (flutter_map/OSM) + GPS réel + tri distance | ✅ Fait |
 | ⭐ | Notation croisée : acheteur↔vendeur après retrait + recalcul des moyennes | ✅ Fait |
+| 📊 | Dashboard commerçant : produits, stock bas, réservations, CA (simulé) | ✅ Fait |
 
 ### Journal
 - **Étape 1** — Projet `dioula_market` initialisé (Flutter 3.32 / Dart 3.8).
@@ -603,6 +606,20 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
     étoiles** sur le profil (dès le 1ᵉʳ avis reçu). Les notes déjà présentes
     partout (cartes produits/boutiques) profitent du recalcul.
   - **SQL à exécuter** : `supabase/step8.sql` (dépend de `step6.sql`).
+  - Vérifié : `flutter analyze` = 0 problème.
+
+- **📊 Étape 9 — Tableau de bord commerçant** :
+  - **Écran** (`seller_dashboard_screen.dart`, réservé aux vendeurs) : en-tête
+    boutique (nom, commune, note), **4 tuiles** (Produits, Stock bas,
+    Réservations actives, Retraits confirmés), carte **Chiffre d'affaires
+    simulé** (CA confirmé / acomptes en attente / remboursé), **liste stock bas**
+    (< 5) et raccourcis (Gérer mes produits / Réservations reçues).
+  - **Agrégation** : tout est calculé côté app à partir des données déjà
+    disponibles (`myShopProvider`, `productsByShopProvider`,
+    `shopReservationsProvider`) — le CA est dérivé des **réservations** (lisibles
+    par le vendeur via RLS), pas de la table `payments`. **Aucun SQL** à exécuter.
+  - **Câblage** : route `/dashboard` enregistrée ; le service **« Tableau de
+    bord »** de l'accueil (vendeur) ouvre l'écran (fin du placeholder « bientôt »).
   - Vérifié : `flutter analyze` = 0 problème.
 
 ---

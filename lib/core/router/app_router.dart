@@ -13,6 +13,7 @@ import '../../features/catalog/domain/catalog_product.dart';
 import '../../features/catalog/presentation/product_detail_screen.dart';
 import '../../features/catalog/presentation/search_screen.dart';
 import '../../features/catalog/presentation/shop_detail_screen.dart';
+import '../../features/dashboard/presentation/seller_dashboard_screen.dart';
 import '../../features/home/presentation/main_shell.dart';
 import '../../features/map/presentation/nearby_map_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
@@ -205,6 +206,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'map',
         pageBuilder: (context, state) =>
             _fade(state, const NearbyMapScreen()),
+      ),
+
+      // --- Tableau de bord commerçant ---
+      GoRoute(
+        path: AppRoutes.dashboard,
+        name: 'dashboard',
+        pageBuilder: (context, state) =>
+            _fade(state, const SellerDashboardScreen()),
       ),
       GoRoute(
         path: AppRoutes.tutorial,
