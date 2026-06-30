@@ -10,6 +10,7 @@ import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/success_screen.dart';
 import '../../features/activity/presentation/activity_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
+import '../../features/profile/presentation/kyc_screen.dart';
 import '../../features/catalog/domain/catalog_product.dart';
 import '../../features/catalog/presentation/product_detail_screen.dart';
 import '../../features/catalog/presentation/search_screen.dart';
@@ -212,6 +213,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'history',
         pageBuilder: (context, state) =>
             _fade(state, const ActivityScreen()),
+      ),
+
+      // --- Vérification d'identité (KYC) ---
+      GoRoute(
+        path: AppRoutes.kyc,
+        name: 'kyc',
+        pageBuilder: (context, state) => _fade(state, const KycScreen()),
       ),
 
       // --- Carte de proximité (géolocalisation) ---

@@ -44,6 +44,9 @@ class AppRoutes {
   // Historique des actions
   static const history = '/history';
 
+  // Vérification d'identité (KYC)
+  static const kyc = '/kyc';
+
   // Carte
   static const map = '/map';
 

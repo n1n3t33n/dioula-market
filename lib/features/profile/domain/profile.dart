@@ -13,6 +13,9 @@ class Profile {
     this.longitude,
     this.ratingAvg = 0,
     this.ratingCount = 0,
+    this.verificationStatus = 'non_soumis',
+    this.idDocPath,
+    this.residenceDocPath,
   });
 
   final String id;
@@ -26,9 +29,17 @@ class Profile {
   final double ratingAvg;
   final int ratingCount;
 
+  // KYC (vérification d'identité).
+  final String verificationStatus; // non_soumis / en_attente / verifie / refuse
+  final String? idDocPath;
+  final String? residenceDocPath;
+
   /// Nom affichable (fallback si vide).
   String get displayName =>
       (fullName == null || fullName!.trim().isEmpty) ? 'Utilisateur' : fullName!;
+
+  bool get isVerified => verificationStatus == 'verifie';
+  bool get isPendingVerification => verificationStatus == 'en_attente';
 
   factory Profile.fromMap(Map<String, dynamic> map) {
     return Profile(
@@ -42,6 +53,10 @@ class Profile {
       longitude: (map['longitude'] as num?)?.toDouble(),
       ratingAvg: (map['rating_avg'] as num?)?.toDouble() ?? 0,
       ratingCount: (map['rating_count'] as num?)?.toInt() ?? 0,
+      verificationStatus:
+          map['verification_status'] as String? ?? 'non_soumis',
+      idDocPath: map['id_doc_path'] as String?,
+      residenceDocPath: map['residence_doc_path'] as String?,
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -8,6 +10,8 @@ import '../domain/profile.dart';
 class ProfileRepository {
   ProfileRepository(this._client);
   final SupabaseClient _client;
+
+  static const _kycBucket = 'kyc-docs';
 
   /// Récupère un profil par son id (= id de l'utilisateur auth).
   Future<Profile?> fetch(String id) async {
@@ -20,6 +24,33 @@ class ProfileRepository {
   Future<void> update(Profile profile) async {
     await _client.from('profiles').update(profile.toMap()).eq('id', profile.id);
   }
+
+  // ---- KYC (vérification d'identité) ----
+
+  /// Téléverse un document KYC dans le bucket privé (dossier = uid).
+  /// [kind] = 'id' ou 'residence'. Renvoie le chemin stocké.
+  Future<String> uploadKycDoc({
+    required Uint8List bytes,
+    required String kind,
+    String contentType = 'image/jpeg',
+  }) async {
+    final uid = _client.auth.currentUser!.id;
+    final path = '$uid/${kind}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    await _client.storage.from(_kycBucket).uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(upsert: true, contentType: contentType),
+        );
+    return path;
+  }
+
+  /// Soumet les 2 pièces → passe le profil "en vérification".
+  Future<void> submitKyc(String idPath, String residencePath) =>
+      _client.rpc('submit_kyc',
+          params: {'p_id_path': idPath, 'p_residence_path': residencePath});
+
+  /// Validation simulée (en prod : revue admin / fournisseur KYC).
+  Future<void> simulateVerifyKyc() => _client.rpc('simulate_verify_kyc');
 }
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {

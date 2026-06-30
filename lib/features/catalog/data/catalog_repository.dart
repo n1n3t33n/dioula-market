@@ -25,10 +25,11 @@ class CatalogRepository {
   }
 
   /// Toutes les boutiques actives, triées par meilleure note.
+  /// Jointure sur le propriétaire pour connaître son statut de vérification.
   Future<List<Shop>> fetchShops() async {
     final data = await _client
         .from('shops')
-        .select()
+        .select('*, owner:profiles(verification_status)')
         .eq('is_active', true)
         .order('rating_avg', ascending: false);
     return (data as List)

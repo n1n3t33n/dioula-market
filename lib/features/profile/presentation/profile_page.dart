@@ -14,6 +14,14 @@ import '../../auth/presentation/guest_provider.dart';
 import '../../reviews/presentation/widgets/star_rating.dart';
 import '../data/profile_repository.dart';
 
+/// Libellé court du statut de vérification (KYC) pour le sous-titre.
+String _kycLabel(String? status) => switch (status) {
+      'verifie' => 'Identité vérifiée ✓',
+      'en_attente' => 'En cours de vérification',
+      'refuse' => 'Vérification refusée',
+      _ => 'Non vérifiée — à compléter',
+    };
+
 /// Onglet « Profil » : infos utilisateur + paramètres (dark mode, déconnexion).
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -64,9 +72,23 @@ class ProfilePage extends ConsumerWidget {
                         ?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
                 if (profile != null)
-                  Chip(
-                    label: Text(profile.role.label),
-                    avatar: const Icon(Icons.badge_outlined, size: 16),
+                  Wrap(
+                    spacing: 6,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      Chip(
+                        label: Text(profile.role.label),
+                        avatar: const Icon(Icons.badge_outlined, size: 16),
+                      ),
+                      if (profile.isVerified)
+                        Chip(
+                          label: const Text('Vérifié'),
+                          avatar: const Icon(Icons.verified,
+                              size: 16, color: AppColors.success),
+                          backgroundColor:
+                              AppColors.success.withValues(alpha: 0.12),
+                        ),
+                    ],
                   ),
                 if (profile != null && profile.ratingCount > 0) ...[
                   const SizedBox(height: 6),
@@ -120,6 +142,17 @@ class ProfilePage extends ConsumerWidget {
                     title: const Text('Ma boutique'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push(AppRoutes.myShop),
+                  ),
+                ],
+                // Vérification d'identité : obligatoire pour les pros.
+                if ((role?.isSeller ?? false) || (role?.isCourier ?? false)) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.verified_user_outlined),
+                    title: const Text('Vérification d\'identité'),
+                    subtitle: Text(_kycLabel(profile?.verificationStatus)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push(AppRoutes.kyc),
                   ),
                 ],
                 const Divider(height: 1),

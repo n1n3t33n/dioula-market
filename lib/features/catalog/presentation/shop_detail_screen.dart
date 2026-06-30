@@ -83,6 +83,21 @@ class ShopDetailScreen extends ConsumerWidget {
                             style: const TextStyle(color: AppColors.body)),
                       ],
                     ),
+                    if (shop.ownerVerified) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: const [
+                          Icon(Icons.verified,
+                              size: 16, color: AppColors.success),
+                          SizedBox(width: 4),
+                          Text('Vendeur vérifié',
+                              style: TextStyle(
+                                  color: AppColors.success,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12)),
+                        ],
+                      ),
+                    ],
                     if (shop.description != null) ...[
                       const SizedBox(height: 10),
                       Text(shop.description!,

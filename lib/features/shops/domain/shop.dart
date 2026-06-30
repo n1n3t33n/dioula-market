@@ -19,6 +19,7 @@ class Shop {
     this.isActive = true,
     this.ratingAvg = 0,
     this.ratingCount = 0,
+    this.ownerVerified = false,
   });
 
   final String id;
@@ -35,6 +36,9 @@ class Shop {
   final bool isActive;
   final double ratingAvg;
   final int ratingCount;
+
+  /// Le propriétaire a-t-il une identité vérifiée (KYC) ? (via jointure)
+  final bool ownerVerified;
 
   /// Construit un Shop depuis une ligne Supabase.
   factory Shop.fromMap(Map<String, dynamic> map) {
@@ -53,6 +57,9 @@ class Shop {
       isActive: map['is_active'] as bool? ?? true,
       ratingAvg: (map['rating_avg'] as num?)?.toDouble() ?? 0,
       ratingCount: (map['rating_count'] as num?)?.toInt() ?? 0,
+      ownerVerified:
+          (map['owner'] as Map<String, dynamic>?)?['verification_status'] ==
+              'verifie',
     );
   }
 
@@ -97,6 +104,7 @@ class Shop {
       isActive: isActive ?? this.isActive,
       ratingAvg: ratingAvg,
       ratingCount: ratingCount,
+      ownerVerified: ownerVerified,
     );
   }
 }

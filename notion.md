@@ -133,8 +133,9 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `presentation/widgets/auth_scaffold.dart` | Gabarit commun auth (fond animé + entrée) |
 | **features/profile/** | |
 | `domain/profile.dart` | Modèle `Profile` (rôle, géoloc, note) |
-| `data/profile_repository.dart` | Lecture/MAJ profil + `currentProfileProvider` |
+| `data/profile_repository.dart` | Lecture/MAJ profil + `currentProfileProvider` + upload KYC |
 | `presentation/profile_page.dart` | Onglet Profil (infos + paramètres) |
+| `presentation/kyc_screen.dart` | Vérification d'identité (dépôt pièces + statut) |
 | **features/tutorial/** | |
 | `domain/tutorial_step.dart` | Étapes du tuto **par rôle** (logique métier) |
 | `presentation/tutorial_provider.dart` | Tuto en attente après inscription |
@@ -242,6 +243,10 @@ Fichiers SQL à exécuter dans **SQL Editor** (dans l'ordre) :
 8. [`supabase/step11.sql`](supabase/step11.sql) — **étape 10a** : historique des
    actions — table `activity_log` (+ RLS) & `log_activity` + triggers
    (demandes, offres, réservations, commandes, avis). Ré-exécutable.
+9. [`supabase/step12.sql`](supabase/step12.sql) — **étape 10b** : KYC — colonnes
+   de vérification sur `profiles`, **bucket Storage `kyc-docs`** + politiques
+   (créés par le script, rien à faire à la main), RPC `submit_kyc` /
+   `simulate_verify_kyc`. Ré-exécutable.
 
 ### 🌱 Comptes de démonstration (seed) — mot de passe commun `demo1234`
 | Email | Rôle | Lieu / boutique |
@@ -715,6 +720,23 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - **SQL à exécuter** : `supabase/step11.sql`. Vérifié : `flutter analyze` = 0 problème.
   - *(Premier des 5 sous-lots « gros lot simulé » : 10a historique ✅, puis 10b
     KYC, 10c CNI consommateur, 10d calendrier de créneaux, 10e planning livreurs.)*
+
+- **🪪 Étape 10b — KYC (vérification d'identité)** :
+  - **Vendeurs / producteurs / livreurs** déposent **pièce d'identité** +
+    **certificat de résidence** (via `image_picker`, téléversés dans le **bucket
+    Storage privé `kyc-docs`**, dossier = uid) → statut **en vérification** puis
+    **vérifié** (validation simulée `simulate_verify_kyc`).
+  - **Écran « Vérification d'identité »** (`profile/presentation/kyc_screen.dart`)
+    accessible depuis le profil ; **badge « Vérifié »** sur le profil et sur la
+    **fiche boutique** (jointure `shops → profiles.verification_status`).
+  - **Profil** : champs `verification_status` / `id_doc_path` /
+    `residence_doc_path` ; RPC `submit_kyc`. **Tout le Storage est créé par
+    `step12.sql`** (bucket + politiques RLS « chacun son dossier »).
+  - Dépendance ajoutée : `image_picker`. **SQL à exécuter** : `supabase/step12.sql`.
+    Vérifié : `flutter analyze` = 0 problème.
+  - *Note : ici la vérification se fait depuis le profil (non bloquante) ; en prod
+    elle serait exigée à l'inscription. La porte « obligatoire » arrive en 10c
+    (CNI consommateur avant grosse commande).*
 
 ---
 
