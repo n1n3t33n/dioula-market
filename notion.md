@@ -650,6 +650,17 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - **SQL à exécuter** : `supabase/step10.sql` (dépend de `step6.sql`).
   - Vérifié : `flutter analyze` = 0 problème.
 
+- **🔧 Cohérence (demandes) + carrousel dynamique** :
+  - **Demandes réservées aux comptes concernés** : les **visiteurs** et les
+    **livreurs** n'ont plus accès aux demandes — onglet « Demandes » masqué pour
+    le visiteur (`main_shell`), section « Demandes en cours » et service
+    « Demande » de l'accueil affichés **seulement** pour consommateur/vendeur
+    (`home_feed_page`). Le hub restait déjà gated, c'est l'accueil qui exposait
+    l'entrée.
+  - **Carrousel** : auto-défilement en boucle (~4 s) + **bannières cliquables**
+    (Demande → hub gated / Frais → recherche / Livraison → carte).
+  - Pas de SQL, pas de nouvelle dépendance. Vérifié : `flutter analyze` = 0 problème.
+
 ---
 
 ## 7. Notes & décisions

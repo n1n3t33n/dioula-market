@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -52,10 +54,16 @@ class HomeFeedPage extends ConsumerWidget {
         profile?.displayName ?? (isGuest ? 'Invité' : 'Bienvenue');
     final location = profile?.commune ?? 'Côte d\'Ivoire';
 
+    // Les demandes ne concernent que consommateurs et vendeurs
+    // (pas les visiteurs ni les livreurs).
+    final role = profile?.role;
+    final showRequests =
+        !isGuest && (role?.isConsumer == true || role?.isSeller == true);
+
     final productsAsync = ref.watch(allProductsProvider);
     final shopsAsync = ref.watch(allShopsProvider);
     final producersAsync = ref.watch(producerShopsProvider);
-    final requestsAsync = ref.watch(openRequestsProvider);
+    final requestsAsync = showRequests ? ref.watch(openRequestsProvider) : null;
 
     return Scaffold(
       body: SafeArea(
@@ -139,16 +147,18 @@ class HomeFeedPage extends ConsumerWidget {
               const SizedBox(height: 12),
               _ProductRail(async: productsAsync, take: 8, byRating: true),
 
-              // ---- Demandes en cours ----
-              const SizedBox(height: 20),
-              const _SectionPadding(
-                child: SectionHeader(
-                  title: 'Demandes en cours',
-                  subtitle: 'Des consommateurs cherchent…',
+              // ---- Demandes en cours (consommateurs & vendeurs uniquement) ----
+              if (showRequests) ...[
+                const SizedBox(height: 20),
+                const _SectionPadding(
+                  child: SectionHeader(
+                    title: 'Demandes en cours',
+                    subtitle: 'Des consommateurs cherchent…',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              _RequestsList(async: requestsAsync),
+                const SizedBox(height: 8),
+                _RequestsList(async: requestsAsync!),
+              ],
             ],
           ),
         ),
@@ -317,11 +327,10 @@ class _ServicesRow extends ConsumerWidget {
         // Carte de proximité : consultable sans compte.
         _Service(Icons.map, 'Carte', AppColors.info,
             () => context.push(AppRoutes.map)),
-        _Service(Icons.bolt, 'Demande', AppColors.clay, () {
-          if (requireAccount(context, ref, action: 'publier une demande')) {
-            context.push(AppRoutes.requests);
-          }
-        }),
+        // Demandes réservées aux comptes connectés (pas les visiteurs).
+        if (!isGuest)
+          _Service(Icons.bolt, 'Demande', AppColors.clay,
+              () => context.push(AppRoutes.requests)),
         _Service(Icons.event_available, 'Réservations', AppColors.success, () {
           if (requireAccount(context, ref, action: 'voir tes réservations')) {
             context.push(AppRoutes.reservations);
@@ -382,14 +391,15 @@ class _Service {
 // ---------------------------------------------------------------------------
 //  CARROUSEL PROMO
 // ---------------------------------------------------------------------------
-class _PromoCarousel extends StatefulWidget {
+class _PromoCarousel extends ConsumerStatefulWidget {
   const _PromoCarousel();
   @override
-  State<_PromoCarousel> createState() => _PromoCarouselState();
+  ConsumerState<_PromoCarousel> createState() => _PromoCarouselState();
 }
 
-class _PromoCarouselState extends State<_PromoCarousel> {
+class _PromoCarouselState extends ConsumerState<_PromoCarousel> {
   final _controller = PageController(viewportFraction: 0.9);
+  Timer? _timer;
   int _page = 0;
 
   static const _banners = <(String, String, IconData, List<Color>)>[
@@ -414,9 +424,43 @@ class _PromoCarouselState extends State<_PromoCarousel> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Défilement automatique (boucle) toutes les 4 s.
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!_controller.hasClients) return;
+      final next = (_page + 1) % _banners.length;
+      _controller.animateToPage(next,
+          duration: const Duration(milliseconds: 450), curve: Curves.easeInOut);
+    });
+  }
+
+  @override
   void dispose() {
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Destination de chaque bannière (cohérente avec l'accès aux demandes).
+  void _open(int i) {
+    if (i == 0) {
+      // Demande instantanée : réservée aux comptes (consommateur/vendeur).
+      if (ref.read(isGuestProvider)) {
+        requireAccount(context, ref, action: 'publier une demande');
+        return;
+      }
+      final role = ref.read(currentProfileProvider).value?.role;
+      if (role?.isConsumer == true || role?.isSeller == true) {
+        context.push(AppRoutes.requests);
+      } else {
+        context.push(AppRoutes.search); // livreur : repli neutre
+      }
+    } else if (i == 1) {
+      context.push(AppRoutes.search);
+    } else {
+      context.push(AppRoutes.map);
+    }
   }
 
   @override
@@ -433,34 +477,38 @@ class _PromoCarouselState extends State<_PromoCarousel> {
               final b = _banners[i];
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: b.$4),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(b.$1,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 6),
-                            Text(b.$2,
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 12.5)),
-                          ],
+                child: GestureDetector(
+                  onTap: () => _open(i),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: b.$4),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(b.$1,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 6),
+                              Text(b.$2,
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 12.5)),
+                            ],
+                          ),
                         ),
-                      ),
-                      Icon(b.$3,
-                          color: Colors.white.withValues(alpha: 0.9), size: 46),
-                    ],
+                        Icon(b.$3,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            size: 46),
+                      ],
+                    ),
                   ),
                 ),
               );

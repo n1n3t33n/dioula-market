@@ -71,12 +71,13 @@ class _MainShellState extends ConsumerState<MainShell> {
             Icons.person_outline, Icons.person, 'Profil', ProfilePage()),
       ];
     } else {
-      // Consommateur + visiteur.
+      // Consommateur + visiteur. Les demandes ne concernent pas les visiteurs.
       tabs = [
         _NavTab(Icons.home_outlined, Icons.home, 'Accueil',
             HomeFeedPage(onOpenShop: () {})),
-        const _NavTab(
-            Icons.bolt_outlined, Icons.bolt, 'Demandes', RequestsHubScreen()),
+        if (!isGuest)
+          const _NavTab(
+              Icons.bolt_outlined, Icons.bolt, 'Demandes', RequestsHubScreen()),
         const _NavTab(
             Icons.person_outline, Icons.person, 'Profil', ProfilePage()),
       ];
