@@ -11,6 +11,7 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/guest_gate.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../auth/presentation/guest_provider.dart';
+import '../../reviews/presentation/widgets/star_rating.dart';
 import '../data/profile_repository.dart';
 
 /// Onglet « Profil » : infos utilisateur + paramètres (dark mode, déconnexion).
@@ -76,6 +77,21 @@ class ProfilePage extends ConsumerWidget {
                     label: Text(profile.role.label),
                     avatar: const Icon(Icons.badge_outlined, size: 16),
                   ),
+                if (profile != null && profile.ratingCount > 0) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      StarsDisplay(rating: profile.ratingAvg, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${profile.ratingAvg.toStringAsFixed(1)} '
+                        '(${profile.ratingCount} avis)',
+                        style: const TextStyle(color: AppColors.body),
+                      ),
+                    ],
+                  ),
+                ],
                 if (email.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(email, style: const TextStyle(color: AppColors.body)),

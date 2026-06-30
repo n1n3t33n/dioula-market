@@ -193,8 +193,14 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `data/map_repository.dart` | RPC `nearby_shops` + providers (position, rayon) |
 | `presentation/nearby_map_screen.dart` | Carte OSM + marqueurs + liste triée par distance |
 | `presentation/widgets/nearby_shop_tile.dart` | Ligne « boutique proche » (distance, note) |
+| **features/reviews/** | (notation croisée 5 étoiles) |
+| `domain/review.dart` | Modèle d'un avis (note, commentaire, auteur) |
+| `data/reviews_repository.dart` | Lecture/écriture des avis + providers |
+| `presentation/rating_sheet.dart` | Feuille de notation (étoiles + commentaire) |
+| `presentation/widgets/star_rating.dart` | Étoiles (affichage + sélecteur) |
+| `presentation/widgets/review_tile.dart` | Ligne d'avis (auteur, note, date, texte) |
 
-> Les dossiers `features/{orders,reviews,dashboard}`
+> Les dossiers `features/{orders,dashboard}`
 > existent (structure) mais seront remplis aux étapes suivantes.
 
 ---
@@ -214,6 +220,10 @@ Fichiers SQL à exécuter dans **SQL Editor** (dans l'ordre) :
    bas) ; fonctions **réservation** `reserve_product` / `complete_reservation` /
    `cancel_reservation` / `expire_reservations` (acompte + stock auto).
    Ré-exécutable.
+6. [`supabase/step8.sql`](supabase/step8.sql) — **étape 8** : notation croisée —
+   colonne `reviews.reservation_id` (+ anti-doublon), **recalcul auto** des
+   moyennes (`shops`/`profiles`) par trigger, notification de nouvel avis.
+   Ré-exécutable (dépend de `push_notif` de step6).
 
 ### 🌱 Comptes de démonstration (seed) — mot de passe commun `demo1234`
 | Email | Rôle | Lieu / boutique |
@@ -303,7 +313,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 5 | Demande instantanée (Realtime) + offres + acceptation | ✅ Fait |
 | 6 | Réservation avec acompte (simulé) + automatisations stock | ✅ Fait |
 | 7 | Géolocalisation (carte, tri proximité) | ✅ Fait |
-| 8 | Notation croisée 5 étoiles | ⏳ |
+| 8 | Notation croisée 5 étoiles | ✅ Fait |
 | 9 | Dashboard commerçant | ⏳ |
 | 🎨 | Refonte UI (templates Foodly + Rive, dark mode) | ✅ Fait (3/3) |
 | ➕ | Accès visiteur + mini-tuto par rôle | ✅ Fait |
@@ -314,6 +324,7 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
 | 🎟️ | Réservation + acompte simulé + annulation 12h + stock auto | ✅ Fait |
 | 🔔 | Notifications in-app temps réel (offres, réservations, stock) | ✅ Fait |
 | 🗺️ | Géolocalisation : carte de proximité (flutter_map/OSM) + GPS réel + tri distance | ✅ Fait |
+| ⭐ | Notation croisée : acheteur↔vendeur après retrait + recalcul des moyennes | ✅ Fait |
 
 ### Journal
 - **Étape 1** — Projet `dioula_market` initialisé (Flutter 3.32 / Dart 3.8).
@@ -578,6 +589,22 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - Dépendances ajoutées : `flutter_map`, `latlong2`, `geolocator`.
   - Vérifié : `flutter analyze` = 0 problème.
 
+- **⭐ Étape 8 — Notation croisée (avis 5 étoiles)** :
+  - **Croisée** : après un **retrait confirmé** (réservation *terminée*),
+    l'**acheteur note la boutique** (depuis « Mes réservations ») **et** le
+    **vendeur note l'acheteur** (depuis « Réservations reçues »). Bouton
+    « Noter » remplacé par « Noté ✓ » une fois l'avis donné (anti-doublon).
+  - **Feuille de notation** (`rating_sheet.dart`) : sélecteur d'étoiles 1–5 +
+    commentaire optionnel. Widgets `StarsDisplay` / `StarPicker` / `ReviewTile`.
+  - **Recalcul auto des moyennes** (SQL `step8.sql`) : un **trigger** recalcule
+    `shops.rating_avg`/`rating_count` et `profiles.rating_avg`/`rating_count` à
+    chaque insert/update/delete d'avis ; **notification** au destinataire.
+  - **Affichage** : section **« Avis (N) »** sur la fiche boutique ; **note +
+    étoiles** sur le profil (dès le 1ᵉʳ avis reçu). Les notes déjà présentes
+    partout (cartes produits/boutiques) profitent du recalcul.
+  - **SQL à exécuter** : `supabase/step8.sql` (dépend de `step6.sql`).
+  - Vérifié : `flutter analyze` = 0 problème.
+
 ---
 
 ## 7. Notes & décisions
@@ -773,6 +800,10 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   *Ex. : « 18 kg dispo à 8 000 FCFA, livré demain » → table `offers`.*
 - **Acompte (simulé)** — Avance payée pour réserver un produit.
   *Ex. : 30 % du total réservé via un faux écran de paiement (étape 6).*
+- **Notation croisée** — Les deux parties d'une transaction se notent
+  mutuellement (5 étoiles). *Ex. : après un retrait, l'acheteur note la boutique
+  et le vendeur note l'acheteur (étape 8) ; les moyennes sont recalculées par un
+  trigger SQL.*
 - **Stock** — Quantité disponible d'un produit.
   *Ex. : `products.stock = 50` (50 kg d'oignons en stock).*
 - **FCFA** — La monnaie (Franc CFA) utilisée pour les prix.

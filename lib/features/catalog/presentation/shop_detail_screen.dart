@@ -6,6 +6,8 @@ import '../../../core/router/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/widgets/guest_invite_sheet.dart';
+import '../../reviews/data/reviews_repository.dart';
+import '../../reviews/presentation/widgets/review_tile.dart';
 import '../../shops/domain/shop.dart';
 import '../data/catalog_repository.dart';
 import '../domain/categories.dart';
@@ -144,6 +146,62 @@ class ShopDetailScreen extends ConsumerWidget {
                     childCount: products.length,
                   ),
                 ),
+              );
+            },
+          ),
+          if (shop != null)
+            SliverToBoxAdapter(child: _ReviewsSection(shopId: shopId)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Section « Avis » de la fiche boutique (liste des notations reçues).
+class _ReviewsSection extends ConsumerWidget {
+  const _ReviewsSection({required this.shopId});
+  final String shopId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(shopReviewsProvider(shopId));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          async.maybeWhen(
+            data: (reviews) => Text('Avis (${reviews.length})',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            orElse: () => Text('Avis',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+          ),
+          const SizedBox(height: 4),
+          async.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (e, _) => Text('Erreur : $e',
+                style: const TextStyle(color: AppColors.body)),
+            data: (reviews) {
+              if (reviews.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text('Aucun avis pour le moment.',
+                      style: TextStyle(color: AppColors.body)),
+                );
+              }
+              return Column(
+                children: [
+                  for (final rv in reviews) ReviewTile(review: rv),
+                ],
               );
             },
           ),
