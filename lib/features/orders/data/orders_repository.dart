@@ -56,6 +56,18 @@ class OrdersRepository {
         .toList();
   }
 
+  /// Les commandes reçues par une boutique (suivi côté vendeur).
+  Future<List<Order>> fetchForShop(String shopId) async {
+    final data = await _client
+        .from('orders')
+        .select(_select)
+        .eq('shop_id', shopId)
+        .order('created_at', ascending: false);
+    return (data as List)
+        .map((e) => Order.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<void> claimOrder(String id) =>
       _client.rpc('claim_order', params: {'p_order_id': id});
 
@@ -81,4 +93,24 @@ final myCoursesProvider = FutureProvider.autoDispose<List<Order>>((ref) {
 /// Commandes de l'acheteur connecté (suivi).
 final myOrdersProvider = FutureProvider.autoDispose<List<Order>>((ref) {
   return ref.watch(ordersRepositoryProvider).fetchMyOrders();
+});
+
+/// Commandes reçues par une boutique (suivi côté vendeur).
+final shopOrdersProvider =
+    FutureProvider.autoDispose.family<List<Order>, String>((ref, shopId) {
+  return ref.watch(ordersRepositoryProvider).fetchForShop(shopId);
+});
+
+/// Ligne d'**une** commande en **temps réel** (suivi du colis).
+/// `orders` est publié en Realtime (`step10.sql`). Pas de jointure (le reste
+/// vient de l'objet `Order` passé à l'écran) : on récupère ici `status` et
+/// `courier_id` en direct. `null` si la ligne n'est pas (encore) visible.
+final orderLiveProvider = StreamProvider.autoDispose
+    .family<Map<String, dynamic>?, String>((ref, orderId) {
+  final client = ref.watch(supabaseProvider);
+  return client
+      .from('orders')
+      .stream(primaryKey: ['id'])
+      .eq('id', orderId)
+      .map((rows) => rows.isEmpty ? null : rows.first);
 });

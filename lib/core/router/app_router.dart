@@ -16,8 +16,11 @@ import '../../features/catalog/presentation/shop_detail_screen.dart';
 import '../../features/dashboard/presentation/seller_dashboard_screen.dart';
 import '../../features/home/presentation/main_shell.dart';
 import '../../features/map/presentation/nearby_map_screen.dart';
+import '../../features/orders/domain/order.dart';
 import '../../features/orders/presentation/courier_courses_screen.dart';
 import '../../features/orders/presentation/my_orders_screen.dart';
+import '../../features/orders/presentation/order_tracking_screen.dart';
+import '../../features/orders/presentation/shop_orders_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/reservations/presentation/fake_payment_screen.dart';
 import '../../features/reservations/presentation/my_reservations_screen.dart';
@@ -230,6 +233,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'courses',
         pageBuilder: (context, state) =>
             _fade(state, const CourierCoursesScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.orderTracking,
+        name: 'orderTracking',
+        // extra = Order
+        pageBuilder: (context, state) =>
+            _fade(state, OrderTrackingScreen(order: state.extra as Order)),
+      ),
+      GoRoute(
+        path: AppRoutes.shopOrders,
+        name: 'shopOrders',
+        // extra = shopId (String)
+        pageBuilder: (context, state) =>
+            _fade(state, ShopOrdersScreen(shopId: state.extra as String)),
       ),
       GoRoute(
         path: AppRoutes.tutorial,

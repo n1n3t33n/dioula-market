@@ -248,6 +248,13 @@ class _DashboardBody extends ConsumerWidget {
             icon: const Icon(Icons.event_note_outlined),
             label: const Text('Réservations reçues'),
           ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () =>
+                context.push(AppRoutes.shopOrders, extra: shop.id),
+            icon: const Icon(Icons.local_shipping_outlined),
+            label: const Text('Commandes & livraisons'),
+          ),
         ],
       ),
     );

@@ -206,7 +206,10 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `data/orders_repository.dart` | Pool / mes courses / mes commandes + RPC livraison |
 | `presentation/courier_courses_screen.dart` | Livreur : disponibles + mes courses |
 | `presentation/my_orders_screen.dart` | Acheteur : suivi de ses commandes |
+| `presentation/shop_orders_screen.dart` | Vendeur : commandes reçues (suivi) |
+| `presentation/order_tracking_screen.dart` | Suivi temps réel d'une commande + roadmap |
 | `presentation/widgets/order_card.dart` | Carte commande (articles, adresse, statut) |
+| `presentation/widgets/delivery_timeline.dart` | Roadmap du colis (étapes franchies) |
 
 > Toutes les features prévues au déroulé sont désormais implémentées.
 
@@ -660,6 +663,22 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
   - **Carrousel** : auto-défilement en boucle (~4 s) + **bannières cliquables**
     (Demande → hub gated / Frais → recherche / Livraison → carte).
   - Pas de SQL, pas de nouvelle dépendance. Vérifié : `flutter analyze` = 0 problème.
+
+- **📦 Suivi colis en temps réel (roadmap de livraison)** :
+  - **Écran de suivi** (`order_tracking_screen.dart`) ouvrable depuis n'importe
+    quelle carte commande (acheteur, vendeur, livreur) : récap + **roadmap
+    verticale** (`delivery_timeline.dart`) Commande passée → Prise en charge →
+    Livrée, qui **avance en direct**.
+  - **Temps réel** : `orderLiveProvider` = `StreamProvider` sur la ligne `orders`
+    (déjà publiée en Realtime à l'étape 10) → statut **et** `courier_id` live.
+    Quand le livreur prend/livre, la timeline bouge instantanément côté acheteur
+    et vendeur (sans rafraîchir).
+  - **Action contextuelle** : le livreur peut **prendre** / **marquer livrée**
+    directement depuis l'écran de suivi.
+  - **Accès vendeur** : nouvel écran « Commandes de la boutique »
+    (`shop_orders_screen.dart`) atteignable depuis le tableau de bord.
+  - Pas de SQL (réutilise le Realtime de `step10.sql`), pas de dépendance.
+    Vérifié : `flutter analyze` = 0 problème.
 
 ---
 

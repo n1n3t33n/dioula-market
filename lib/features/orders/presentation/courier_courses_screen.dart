@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/orders_repository.dart';
@@ -87,6 +89,8 @@ class _AvailableTab extends ConsumerWidget {
               return OrderCard(
                 order: o,
                 showBuyer: true,
+                onTap: () =>
+                    context.push(AppRoutes.orderTracking, extra: o),
                 action: FilledButton.icon(
                   onPressed: () => _claim(context, ref, o.id),
                   icon: const Icon(Icons.two_wheeler, size: 18),
@@ -154,6 +158,8 @@ class _MyCoursesTab extends ConsumerWidget {
               return OrderCard(
                 order: o,
                 showBuyer: true,
+                onTap: () =>
+                    context.push(AppRoutes.orderTracking, extra: o),
                 action: o.isDelivering
                     ? FilledButton.icon(
                         onPressed: () => _deliver(context, ref, o.id),

@@ -5,35 +5,22 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/guest_gate.dart';
-import '../../auth/presentation/guest_provider.dart';
 import '../data/orders_repository.dart';
 import 'widgets/order_card.dart';
 
-/// « Mes commandes » (acheteur) : suivi du statut de livraison.
-class MyOrdersScreen extends ConsumerWidget {
-  const MyOrdersScreen({super.key});
+/// « Commandes de la boutique » (vendeur) : suivi des livraisons de ses ventes.
+class ShopOrdersScreen extends ConsumerWidget {
+  const ShopOrdersScreen({super.key, required this.shopId});
+  final String shopId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (ref.watch(isGuestProvider)) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Mes commandes')),
-        body: const GuestGate(
-          icon: Icons.receipt_long,
-          title: 'Mes commandes',
-          message:
-              'Crée un compte pour passer commande et suivre tes livraisons.',
-        ),
-      );
-    }
-
-    final async = ref.watch(myOrdersProvider);
+    final async = ref.watch(shopOrdersProvider(shopId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes commandes')),
+      appBar: AppBar(title: const Text('Commandes de la boutique')),
       body: RefreshIndicator(
         color: AppColors.clay,
-        onRefresh: () async => ref.invalidate(myOrdersProvider),
+        onRefresh: () async => ref.invalidate(shopOrdersProvider(shopId)),
         child: async.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Erreur : $e')),
@@ -43,10 +30,10 @@ class MyOrdersScreen extends ConsumerWidget {
                 children: const [
                   SizedBox(height: 80),
                   EmptyState(
-                    icon: Icons.receipt_long,
+                    icon: Icons.shopping_bag_outlined,
                     title: 'Aucune commande',
                     message:
-                        'Accepte une offre sur une demande pour créer ta première commande.',
+                        'Les commandes de tes clients (offres acceptées) apparaîtront ici.',
                   ),
                 ],
               );
@@ -57,6 +44,7 @@ class MyOrdersScreen extends ConsumerWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (_, i) => OrderCard(
                 order: orders[i],
+                showBuyer: true,
                 onTap: () => context.push(AppRoutes.orderTracking,
                     extra: orders[i]),
               ),

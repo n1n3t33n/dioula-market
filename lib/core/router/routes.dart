@@ -50,4 +50,6 @@ class AppRoutes {
   // Livraison / commandes
   static const orders = '/orders'; // mes commandes (acheteur)
   static const courses = '/courses'; // espace livreur (pool + mes courses)
+  static const orderTracking = '/order'; // suivi d'une commande (extra = Order)
+  static const shopOrders = '/shop/orders'; // commandes reçues (extra = shopId)
 }

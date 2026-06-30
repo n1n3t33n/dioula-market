@@ -41,6 +41,7 @@ class OrderCard extends StatelessWidget {
     required this.order,
     this.action,
     this.showBuyer = false,
+    this.onTap,
   });
 
   final Order order;
@@ -49,13 +50,18 @@ class OrderCard extends StatelessWidget {
   /// Affiche le nom de l'acheteur (vue livreur).
   final bool showBuyer;
 
+  /// Ouvre le suivi de la commande (optionnel).
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final o = order;
     final color = orderStatusColor(o.status);
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Padding(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,6 +123,7 @@ class OrderCard extends StatelessWidget {
               SizedBox(width: double.infinity, child: action!),
             ],
           ],
+        ),
         ),
       ),
     );
