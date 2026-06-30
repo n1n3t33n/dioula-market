@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +14,7 @@ import '../../../core/widgets/category_chip.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../auth/presentation/guest_provider.dart';
 import '../../auth/presentation/widgets/guest_invite_sheet.dart';
 import '../../catalog/data/catalog_repository.dart';
@@ -194,19 +194,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: AppColors.clay.withValues(alpha: 0.15),
-          backgroundImage:
-              (avatarUrl != null && avatarUrl!.isNotEmpty)
-                  ? CachedNetworkImageProvider(avatarUrl!)
-                  : null,
-          child: (avatarUrl == null || avatarUrl!.isEmpty)
-              ? Text(name.characters.first.toUpperCase(),
-                  style: const TextStyle(
-                      color: AppColors.clay, fontWeight: FontWeight.bold))
-              : null,
-        ),
+        UserAvatar(name: name, url: avatarUrl, radius: 24),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -631,6 +619,9 @@ class _ProductRail extends ConsumerWidget {
                 width: 165,
                 child: ProductCard(
                   product: p,
+                  // Tag unique par rail (un même produit peut figurer dans
+                  // « En vedette » ET « Meilleures notes » sur le même écran).
+                  heroTag: 'rail${byRating ? 'Top' : 'Feat'}-${p.id}',
                   onTap: () =>
                       context.push(AppRoutes.productDetail, extra: p),
                   onAdd: () => requireAccount(context, ref,

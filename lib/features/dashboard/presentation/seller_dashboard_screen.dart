@@ -17,6 +17,7 @@ import '../../reservations/data/reservations_repository.dart';
 import '../../reviews/presentation/widgets/star_rating.dart';
 import '../../shops/data/shop_repository.dart';
 import '../../shops/domain/shop.dart';
+import 'widgets/dashboard_charts.dart';
 
 /// Tableau de bord commerçant : synthèse de SA boutique (produits, stock,
 /// réservations, chiffre d'affaires simulé). Agrège les données déjà
@@ -184,6 +185,18 @@ class _DashboardBody extends ConsumerWidget {
             ],
           ),
 
+          // ---- Réservations par statut (camembert) ----
+          const SizedBox(height: 18),
+          const _SectionTitle('Réservations par statut'),
+          const SizedBox(height: 10),
+          AppCard(
+            child: ReservationsPieChart(
+              active: active.length,
+              done: done.length,
+              lost: lost.length,
+            ),
+          ),
+
           // ---- Chiffre d'affaires (simulé) ----
           const SizedBox(height: 18),
           const _SectionTitle('Chiffre d\'affaires (simulé)'),
@@ -191,6 +204,12 @@ class _DashboardBody extends ConsumerWidget {
           AppCard(
             child: Column(
               children: [
+                RevenueBarChart(
+                  caConfirmed: caConfirmed,
+                  acomptes: acomptesPending,
+                  refunded: refunded,
+                ),
+                const SizedBox(height: 12),
                 _MoneyRow('CA confirmé (retraits)', formatFcfa(caConfirmed),
                     color: AppColors.success),
                 const Divider(height: 18),

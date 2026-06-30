@@ -8,6 +8,7 @@ import '../../features/auth/presentation/otp_controller.dart';
 import '../../features/auth/presentation/otp_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/success_screen.dart';
+import '../../features/activity/presentation/activity_screen.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/catalog/domain/catalog_product.dart';
 import '../../features/catalog/presentation/product_detail_screen.dart';
@@ -203,6 +204,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'notifications',
         pageBuilder: (context, state) =>
             _fade(state, const NotificationsScreen()),
+      ),
+
+      // --- Historique des actions ---
+      GoRoute(
+        path: AppRoutes.history,
+        name: 'history',
+        pageBuilder: (context, state) =>
+            _fade(state, const ActivityScreen()),
       ),
 
       // --- Carte de proximité (géolocalisation) ---

@@ -41,6 +41,9 @@ class AppRoutes {
   // Notifications
   static const notifications = '/notifications';
 
+  // Historique des actions
+  static const history = '/history';
+
   // Carte
   static const map = '/map';
 

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +8,7 @@ import '../../../core/router/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/guest_gate.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../auth/presentation/guest_provider.dart';
 import '../../reviews/presentation/widgets/star_rating.dart';
@@ -49,21 +49,12 @@ class ProfilePage extends ConsumerWidget {
           Center(
             child: Column(
               children: [
-                CircleAvatar(
+                UserAvatar(
+                  name: name,
+                  url: avatarUrl,
                   radius: 44,
                   backgroundColor: AppColors.clay,
-                  backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
-                      ? CachedNetworkImageProvider(avatarUrl)
-                      : null,
-                  child: (avatarUrl == null || avatarUrl.isEmpty)
-                      ? Text(
-                          name.characters.first.toUpperCase(),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 34,
-                              fontWeight: FontWeight.bold),
-                        )
-                      : null,
+                  foregroundColor: Colors.white,
                 ),
                 const SizedBox(height: 12),
                 Text(name,
@@ -131,6 +122,13 @@ class ProfilePage extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.myShop),
                   ),
                 ],
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.history),
+                  title: const Text('Historique de mes actions'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.history),
+                ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.school_outlined),

@@ -13,11 +13,18 @@ class ProductCard extends StatelessWidget {
     required this.product,
     this.onTap,
     this.onAdd,
+    this.heroTag,
   });
 
   final CatalogProduct product;
   final VoidCallback? onTap;
   final VoidCallback? onAdd;
+
+  /// Tag du Hero de l'image. Par défaut `product-<id>` (transition vers la
+  /// fiche). À surcharger quand un même produit peut apparaître **plusieurs
+  /// fois sur le même écran** (ex. rails « En vedette » + « Meilleures notes »)
+  /// pour éviter des tags de Hero en double.
+  final Object? heroTag;
 
   bool get _isFresh => const {
         'Légumes',
@@ -38,7 +45,7 @@ class ProductCard extends StatelessWidget {
             Stack(
               children: [
                 Hero(
-                  tag: 'product-${product.id}',
+                  tag: heroTag ?? 'product-${product.id}',
                   child: ProductImage(
                     url: product.imageUrl,
                     height: 116,

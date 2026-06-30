@@ -201,6 +201,7 @@ Chaque feature suit `data` (accès Supabase) / `domain` (modèles) /
 | `presentation/widgets/review_tile.dart` | Ligne d'avis (auteur, note, date, texte) |
 | **features/dashboard/** | (tableau de bord commerçant) |
 | `presentation/seller_dashboard_screen.dart` | Synthèse boutique : stats, stock bas, CA simulé |
+| `presentation/widgets/dashboard_charts.dart` | Diagrammes (camembert réservations + barres CA) |
 | **features/orders/** | (commandes & livraison — pool de livreurs) |
 | `domain/order.dart` | Modèle commande (+ boutique, acheteur, articles) |
 | `data/orders_repository.dart` | Pool / mes courses / mes commandes + RPC livraison |
@@ -238,6 +239,9 @@ Fichiers SQL à exécuter dans **SQL Editor** (dans l'ordre) :
    RLS « pool » pour les livreurs, fonctions `claim_order` / `mark_order_delivered`
    (+ notifications), Realtime sur `orders`, et **2 commandes de démo**.
    Ré-exécutable (dépend de `push_notif` de step6).
+8. [`supabase/step11.sql`](supabase/step11.sql) — **étape 10a** : historique des
+   actions — table `activity_log` (+ RLS) & `log_activity` + triggers
+   (demandes, offres, réservations, commandes, avis). Ré-exécutable.
 
 ### 🌱 Comptes de démonstration (seed) — mot de passe commun `demo1234`
 | Email | Rôle | Lieu / boutique |
@@ -679,6 +683,38 @@ affiche « Supabase non configuré » sur l'écran d'accueil.
     (`shop_orders_screen.dart`) atteignable depuis le tableau de bord.
   - Pas de SQL (réutilise le Realtime de `step10.sql`), pas de dépendance.
     Vérifié : `flutter analyze` = 0 problème.
+
+- **📈 Diagrammes du tableau de bord** :
+  - Ajout de `fl_chart`. Le tableau de bord commerçant gagne un **camembert**
+    « Réservations par statut » (actives / terminées / perdues) et un
+    **histogramme** « Chiffre d'affaires (simulé) » (CA / acompte / remboursé),
+    en plus des chiffres exacts déjà présents.
+  - `presentation/widgets/dashboard_charts.dart` (`ReservationsPieChart` +
+    `RevenueBarChart`), gère le cas « pas encore de données ».
+  - Dépendance ajoutée : **`fl_chart 0.69`** (la 1.x exige un `vector_math` plus
+    récent que celui du SDK → erreur `Matrix4.translateByDouble`). Pas de SQL.
+    Vérifié : `flutter analyze` = 0 problème.
+
+- **🩹 Correctifs run (web)** :
+  - **Hero dupliqué** : un même produit pouvait apparaître dans « En vedette »
+    ET « Meilleures notes » → tags de Hero en double. `ProductCard` accepte un
+    `heroTag` ; chaque rail de l'accueil utilise un préfixe unique.
+  - **Avatars** : nouveau widget `core/widgets/user_avatar.dart` (photo réseau
+    avec **repli gracieux sur l'initiale** si l'image échoue — fini les
+    `EncodingError` pravatar dans la console). Utilisé dans l'accueil, le profil
+    et les avis.
+
+- **🧾 Étape 10a — Historique des actions (journal d'audit)** :
+  - Table `activity_log` + helper `log_activity` + **triggers** (demandes,
+    offres, réservations, commandes/livraisons, avis) → chaque action de
+    l'utilisateur est tracée (`step11.sql`).
+  - **Feature `activity`** : `ActivityEntry`, `ActivityRepository`
+    (`myActivityProvider`), écran **« Historique »** (icône par type + temps
+    relatif), accessible depuis le **profil**. Chacun ne voit que **ses**
+    actions (RLS `actor_id = auth.uid()`).
+  - **SQL à exécuter** : `supabase/step11.sql`. Vérifié : `flutter analyze` = 0 problème.
+  - *(Premier des 5 sous-lots « gros lot simulé » : 10a historique ✅, puis 10b
+    KYC, 10c CNI consommateur, 10d calendrier de créneaux, 10e planning livreurs.)*
 
 ---
 

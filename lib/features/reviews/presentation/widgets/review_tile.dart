@@ -1,7 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/user_avatar.dart';
 import '../../domain/review.dart';
 import 'star_rating.dart';
 
@@ -19,20 +19,7 @@ class ReviewTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: AppColors.clay.withValues(alpha: 0.15),
-            backgroundImage: (avatar != null && avatar.isNotEmpty)
-                ? CachedNetworkImageProvider(avatar)
-                : null,
-            child: (avatar == null || avatar.isEmpty)
-                ? Text(
-                    review.authorName.characters.first.toUpperCase(),
-                    style: const TextStyle(
-                        color: AppColors.clay, fontWeight: FontWeight.bold),
-                  )
-                : null,
-          ),
+          UserAvatar(name: review.authorName, url: avatar, radius: 18),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
